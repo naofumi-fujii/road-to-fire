@@ -8,6 +8,7 @@ export default function Home() {
   const [targetAmount, setTargetAmount] = useState(12000000); // 目標額（デフォルト1200万円）
   const [monthlyAmount, setMonthlyAmount] = useState(200000); // 毎月の積立額（デフォルト20万円）
   const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
+  const [dividendYield, setDividendYield] = useState(5); // 配当利回り（デフォルト5%）
 
   // 積立シミュレーションの計算
   const simulationData = useMemo(() => {
@@ -51,7 +52,7 @@ export default function Home() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">設定</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 目標金額（円）
@@ -100,6 +101,21 @@ export default function Home() {
                 max="20"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                配当利回り（%）
+              </label>
+              <input
+                type="number"
+                value={dividendYield}
+                onChange={(e) => setDividendYield(Number(e.target.value))}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 dark:bg-gray-700"
+                step="0.5"
+                min="0"
+                max="20"
+              />
+            </div>
           </div>
         </div>
 
@@ -134,10 +150,10 @@ export default function Home() {
             <div className="bg-orange-50 dark:bg-orange-900/30 p-4 rounded-lg">
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">毎月の配当額</p>
               <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                {Math.round(targetAmount / 120).toLocaleString()}円
+                {Math.round(targetAmount * dividendYield / 100 / 12).toLocaleString()}円
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                （目標額÷120）
+                （目標額×配当利回り÷12）
               </p>
             </div>
           </div>
