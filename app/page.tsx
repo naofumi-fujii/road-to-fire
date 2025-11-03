@@ -6,7 +6,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 
 export default function Home() {
   const [targetAmount, setTargetAmount] = useState(24000000); // 目標額（デフォルト2400万円）
-  const [monthlyAmount, setMonthlyAmount] = useState(100000); // 毎月の積立額（デフォルト10万円）
+  const [monthlyAmount, setMonthlyAmount] = useState(200000); // 毎月の積立額（デフォルト20万円）
   const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
 
   // 積立シミュレーションの計算
