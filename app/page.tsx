@@ -31,7 +31,11 @@ export default function Home() {
       });
     }
 
-    return { data, months: month, finalAmount: currentAmount };
+    // 目標額到達予定日を計算
+    const targetDate = new Date();
+    targetDate.setMonth(targetDate.getMonth() + month);
+
+    return { data, months: month, finalAmount: currentAmount, targetDate };
   }, [targetAmount, monthlyAmount, annualReturn]);
 
   return (
@@ -130,6 +134,9 @@ export default function Home() {
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 （約{Math.round(simulationData.months / 12 * 10) / 10}年）
+              </p>
+              <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mt-2">
+                {simulationData.targetDate.getFullYear()}年{simulationData.targetDate.getMonth() + 1}月頃
               </p>
             </div>
 
