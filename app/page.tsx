@@ -111,7 +111,7 @@ export default function Home() {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-4 text-gray-800">シミュレーション結果</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600 mb-1">目標達成まで</p>
               <p className="text-2xl font-bold text-blue-600">
@@ -133,6 +133,16 @@ export default function Home() {
               <p className="text-sm text-gray-600 mb-1">運用益</p>
               <p className="text-2xl font-bold text-purple-600">
                 {Math.round(simulationData.finalAmount - monthlyAmount * simulationData.months).toLocaleString()}円
+              </p>
+            </div>
+
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">毎月の配当額</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {Math.round(targetAmount / 120).toLocaleString()}円
+              </p>
+              <p className="text-sm text-gray-500">
+                （目標額÷120）
               </p>
             </div>
           </div>
