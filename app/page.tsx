@@ -68,6 +68,9 @@ export default function Home() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 step="1000000"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                {targetAmount.toLocaleString()}円
+              </p>
             </div>
 
             <div>
@@ -81,6 +84,9 @@ export default function Home() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 step="10000"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                {monthlyAmount.toLocaleString()}円
+              </p>
             </div>
 
             <div>
