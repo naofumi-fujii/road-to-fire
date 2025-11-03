@@ -62,15 +62,16 @@ export default function Home() {
                 目標金額（円）
               </label>
               <input
-                type="number"
-                value={targetAmount}
-                onChange={(e) => setTargetAmount(Number(e.target.value))}
+                type="text"
+                value={targetAmount.toLocaleString()}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/,/g, '');
+                  if (!isNaN(Number(value))) {
+                    setTargetAmount(Number(value));
+                  }
+                }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                step="1000000"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {targetAmount.toLocaleString()}円
-              </p>
             </div>
 
             <div>
@@ -78,15 +79,16 @@ export default function Home() {
                 毎月の積立額（円）
               </label>
               <input
-                type="number"
-                value={monthlyAmount}
-                onChange={(e) => setMonthlyAmount(Number(e.target.value))}
+                type="text"
+                value={monthlyAmount.toLocaleString()}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/,/g, '');
+                  if (!isNaN(Number(value))) {
+                    setMonthlyAmount(Number(value));
+                  }
+                }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                step="10000"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {monthlyAmount.toLocaleString()}円
-              </p>
             </div>
 
             <div>
