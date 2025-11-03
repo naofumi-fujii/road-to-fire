@@ -22,20 +22,9 @@ export default function Home() {
       currentAmount = currentAmount * (1 + monthlyReturn) + monthlyAmount;
       month++;
 
-      // 年ごとにデータポイントを追加
-      if (month % 12 === 0) {
-        data.push({
-          year: month / 12,
-          amount: Math.round(currentAmount),
-          contribution: monthlyAmount * month,
-        });
-      }
-    }
-
-    // 最後のポイントを追加（目標達成時）
-    if (month % 12 !== 0) {
+      // 毎月データポイントを追加
       data.push({
-        year: Math.round(month / 12 * 10) / 10,
+        month: month,
         amount: Math.round(currentAmount),
         contribution: monthlyAmount * month,
       });
@@ -158,8 +147,8 @@ export default function Home() {
               <LineChart data={simulationData.data}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="year"
-                  label={{ value: '年数', position: 'insideBottom', offset: -5 }}
+                  dataKey="month"
+                  label={{ value: '月数', position: 'insideBottom', offset: -5 }}
                 />
                 <YAxis
                   tickFormatter={(value) => `${(value / 10000).toFixed(0)}万`}
@@ -167,7 +156,7 @@ export default function Home() {
                 />
                 <Tooltip
                   formatter={(value: number) => `${value.toLocaleString()}円`}
-                  labelFormatter={(label) => `${label}年後`}
+                  labelFormatter={(label) => `${label}ヶ月後`}
                 />
                 <Legend />
                 <Line
