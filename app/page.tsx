@@ -63,6 +63,8 @@ export default function Home() {
               </label>
               <input
                 type="text"
+                inputMode="numeric"
+                autoComplete="off"
                 value={targetAmount.toLocaleString()}
                 onChange={(e) => {
                   const value = e.target.value.replace(/,/g, '');
@@ -80,6 +82,8 @@ export default function Home() {
               </label>
               <input
                 type="text"
+                inputMode="numeric"
+                autoComplete="off"
                 value={monthlyAmount.toLocaleString()}
                 onChange={(e) => {
                   const value = e.target.value.replace(/,/g, '');
@@ -97,6 +101,8 @@ export default function Home() {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
+                autoComplete="off"
                 value={annualReturn}
                 onChange={(e) => setAnnualReturn(Number(e.target.value))}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 dark:bg-gray-700"
@@ -112,6 +118,8 @@ export default function Home() {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
+                autoComplete="off"
                 value={dividendYield}
                 onChange={(e) => setDividendYield(Number(e.target.value))}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 dark:bg-gray-700"
