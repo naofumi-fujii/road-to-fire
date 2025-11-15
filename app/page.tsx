@@ -74,6 +74,20 @@ export default function Home() {
                 }}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 dark:bg-gray-700"
               />
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setTargetAmount(prev => prev + 10000)}
+                  className="flex-1 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                >
+                  +10,000
+                </button>
+                <button
+                  onClick={() => setTargetAmount(prev => prev + 100000)}
+                  className="flex-1 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                >
+                  +100,000
+                </button>
+              </div>
             </div>
 
             <div>
@@ -93,6 +107,20 @@ export default function Home() {
                 }}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 dark:bg-gray-700"
               />
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setMonthlyAmount(prev => prev + 10000)}
+                  className="flex-1 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                >
+                  +10,000
+                </button>
+                <button
+                  onClick={() => setMonthlyAmount(prev => prev + 100000)}
+                  className="flex-1 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                >
+                  +100,000
+                </button>
+              </div>
             </div>
 
             <div>
