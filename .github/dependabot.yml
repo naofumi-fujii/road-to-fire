@@ -8,7 +8,7 @@ updates:
       day: "friday"
       time: "22:00"
       timezone: "UTC"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 10
 
   # GitHub Actionsの更新設定
   - package-ecosystem: "github-actions"
@@ -18,4 +18,4 @@ updates:
       day: "friday"
       time: "22:00"
       timezone: "UTC"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 10
