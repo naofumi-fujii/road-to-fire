@@ -93,6 +93,7 @@ export default function Home() {
                     colorScheme="blue"
                     size="sm"
                     flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
                     +10,000
                   </Button>
@@ -101,6 +102,7 @@ export default function Home() {
                     colorScheme="blue"
                     size="sm"
                     flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
                     +100,000
                   </Button>
@@ -129,6 +131,7 @@ export default function Home() {
                     colorScheme="blue"
                     size="sm"
                     flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
                     +10,000
                   </Button>
@@ -137,6 +140,7 @@ export default function Home() {
                     colorScheme="blue"
                     size="sm"
                     flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
                     +100,000
                   </Button>
