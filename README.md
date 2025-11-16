@@ -15,10 +15,10 @@
 
 ```bash
 # 依存関係のインストール
-npm install
+pnpm install
 
 # 開発サーバーの起動
-npm run dev
+pnpm run dev
 ```
 
 ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
@@ -26,8 +26,8 @@ npm run dev
 ### ビルド
 
 ```bash
-npm run build
-npm start
+pnpm run build
+pnpm start
 ```
 
 ## Vercelへのデプロイ
@@ -38,7 +38,7 @@ npm start
 
 ```bash
 # Vercel CLIのインストール（初回のみ）
-npm i -g vercel
+pnpm add -g vercel
 
 # デプロイ
 vercel
