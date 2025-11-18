@@ -52,11 +52,10 @@ export default function Home() {
     return { data, months: month, finalAmount: currentAmount, targetDate };
   }, [targetAmount, monthlyAmount, annualReturn]);
 
-  // 推定年収の計算（毎月の積立額から逆算）
+  // 年間積立額の計算
   const estimatedAnnualIncome = useMemo(() => {
-    if (savingsRate === 0) return 0;
-    return Math.round((monthlyAmount * 12) / (savingsRate / 100));
-  }, [monthlyAmount, savingsRate]);
+    return monthlyAmount * 12;
+  }, [monthlyAmount]);
 
   return (
     <Box minH="100vh" p={8} bgGradient="linear(to-br, blue.50, purple.100)" _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}>
@@ -248,12 +247,12 @@ export default function Home() {
               </Box>
 
               <Box bg="teal.50" _dark={{ bg: "teal.900" }} p={4} borderRadius="lg">
-                <Text fontSize="sm" mb={1}>推定年収</Text>
+                <Text fontSize="sm" mb={1}>年間積立額</Text>
                 <Text fontSize="2xl" fontWeight="bold" color="teal.600" _dark={{ color: "teal.400" }}>
                   {estimatedAnnualIncome.toLocaleString()}円
                 </Text>
                 <Text fontSize="sm" color="gray.500">
-                  （貯蓄率{savingsRate}%の場合）
+                  （毎月の積立額×12）
                 </Text>
               </Box>
             </SimpleGrid>
