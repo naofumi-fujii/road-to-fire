@@ -22,7 +22,6 @@ export default function Home() {
   const [monthlyAmount, setMonthlyAmount] = useState(200000); // 毎月の積立額（デフォルト20万円）
   const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
   const [dividendYield, setDividendYield] = useState(5); // 配当利回り（デフォルト5%）
-  const [savingsRate, setSavingsRate] = useState(20); // 貯蓄率（デフォルト20%）
 
   // 積立シミュレーションの計算
   const simulationData = useMemo(() => {
@@ -76,7 +75,7 @@ export default function Home() {
           <Card.Body p={6}>
             <Heading as="h2" size="xl" mb={6}>設定</Heading>
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} gap={6}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6}>
               <VStack align="stretch">
                 <Text fontSize="sm" fontWeight="medium" mb={2}>
                   目標金額（円）
@@ -182,22 +181,6 @@ export default function Home() {
                   step={0.5}
                   min={0}
                   max={20}
-                />
-              </VStack>
-
-              <VStack align="stretch">
-                <Text fontSize="sm" fontWeight="medium" mb={2}>
-                  貯蓄率（%）
-                </Text>
-                <Input
-                  type="number"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={savingsRate}
-                  onChange={(e) => setSavingsRate(Number(e.target.value))}
-                  step={1}
-                  min={1}
-                  max={100}
                 />
               </VStack>
             </SimpleGrid>
