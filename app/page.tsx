@@ -22,6 +22,7 @@ export default function Home() {
   const [monthlyAmount, setMonthlyAmount] = useState(200000); // 毎月の積立額（デフォルト20万円）
   const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
   const [dividendYield, setDividendYield] = useState(5); // 配当利回り（デフォルト5%）
+  const [savingsRate, setSavingsRate] = useState(20); // 貯蓄率（デフォルト20%）
 
   // 積立シミュレーションの計算
   const simulationData = useMemo(() => {
@@ -51,6 +52,12 @@ export default function Home() {
     return { data, months: month, finalAmount: currentAmount, targetDate };
   }, [targetAmount, monthlyAmount, annualReturn]);
 
+  // 推定年収の計算（毎月の積立額から逆算）
+  const estimatedAnnualIncome = useMemo(() => {
+    if (savingsRate === 0) return 0;
+    return Math.round((monthlyAmount * 12) / (savingsRate / 100));
+  }, [monthlyAmount, savingsRate]);
+
   return (
     <Box minH="100vh" p={8} bgGradient="linear(to-br, blue.50, purple.100)" _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}>
       <Container maxW="container.xl">
@@ -70,7 +77,7 @@ export default function Home() {
           <Card.Body p={6}>
             <Heading as="h2" size="xl" mb={6}>設定</Heading>
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} gap={6}>
               <VStack align="stretch">
                 <Text fontSize="sm" fontWeight="medium" mb={2}>
                   目標金額（円）
@@ -178,6 +185,22 @@ export default function Home() {
                   max={20}
                 />
               </VStack>
+
+              <VStack align="stretch">
+                <Text fontSize="sm" fontWeight="medium" mb={2}>
+                  貯蓄率（%）
+                </Text>
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={savingsRate}
+                  onChange={(e) => setSavingsRate(Number(e.target.value))}
+                  step={1}
+                  min={1}
+                  max={100}
+                />
+              </VStack>
             </SimpleGrid>
           </Card.Body>
         </Card.Root>
@@ -186,7 +209,7 @@ export default function Home() {
           <Card.Body p={6}>
             <Heading as="h2" size="xl" mb={4}>シミュレーション結果</Heading>
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={4} mb={6}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} gap={4} mb={6}>
               <Box bg="blue.50" _dark={{ bg: "blue.900" }} p={4} borderRadius="lg">
                 <Text fontSize="sm" mb={1}>目標達成まで</Text>
                 <Text fontSize="2xl" fontWeight="bold" color="blue.600" _dark={{ color: "blue.400" }}>
@@ -221,6 +244,16 @@ export default function Home() {
                 </Text>
                 <Text fontSize="sm" color="gray.500">
                   （目標額×配当利回り÷12）
+                </Text>
+              </Box>
+
+              <Box bg="teal.50" _dark={{ bg: "teal.900" }} p={4} borderRadius="lg">
+                <Text fontSize="sm" mb={1}>推定年収</Text>
+                <Text fontSize="2xl" fontWeight="bold" color="teal.600" _dark={{ color: "teal.400" }}>
+                  {estimatedAnnualIncome.toLocaleString()}円
+                </Text>
+                <Text fontSize="sm" color="gray.500">
+                  （貯蓄率{savingsRate}%の場合）
                 </Text>
               </Box>
             </SimpleGrid>
