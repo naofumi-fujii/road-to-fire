@@ -5,9 +5,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "friday"
-      time: "22:00"
-      timezone: "UTC"
+      day: "wednesday"
+      time: "07:00"
+      timezone: "Asia/Tokyo"
     open-pull-requests-limit: 10
 
   # GitHub Actionsの更新設定
@@ -15,7 +15,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "friday"
-      time: "22:00"
-      timezone: "UTC"
+      day: "wednesday"
+      time: "07:00"
+      timezone: "Asia/Tokyo"
     open-pull-requests-limit: 10
