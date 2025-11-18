@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # npm依存関係の更新設定
+  # npm依存関係の更新設定 - 水曜日
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -10,12 +10,32 @@ updates:
       timezone: "Asia/Tokyo"
     open-pull-requests-limit: 10
 
-  # GitHub Actionsの更新設定
+  # npm依存関係の更新設定 - 土曜日
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "07:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 10
+
+  # GitHub Actionsの更新設定 - 水曜日
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "wednesday"
+      time: "07:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 10
+
+  # GitHub Actionsの更新設定 - 土曜日
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
       time: "07:00"
       timezone: "Asia/Tokyo"
     open-pull-requests-limit: 10
