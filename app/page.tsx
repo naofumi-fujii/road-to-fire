@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { MdRefresh } from 'react-icons/md';
 import { ThemeToggle } from './components/ThemeToggle';
 import {
   Box,
@@ -22,6 +23,14 @@ export default function Home() {
   const [monthlyAmount, setMonthlyAmount] = useState(200000); // 毎月の積立額（デフォルト20万円）
   const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
   const [dividendYield, setDividendYield] = useState(5); // 配当利回り（デフォルト5%）
+
+  // リセット処理
+  const handleReset = () => {
+    setTargetAmount(12000000);
+    setMonthlyAmount(200000);
+    setAnnualReturn(5);
+    setDividendYield(5);
+  };
 
   // 積立シミュレーションの計算
   const simulationData = useMemo(() => {
@@ -73,7 +82,18 @@ export default function Home() {
 
         <Card.Root mb={8}>
           <Card.Body p={6}>
-            <Heading as="h2" size="xl" mb={6}>設定</Heading>
+            <Flex justify="space-between" align="center" mb={6}>
+              <Heading as="h2" size="xl">設定</Heading>
+              <Button
+                onClick={handleReset}
+                colorScheme="gray"
+                size="sm"
+                leftIcon={<MdRefresh />}
+                _dark={{ bg: "gray.700", color: "gray.300", _hover: { bg: "gray.600" } }}
+              >
+                初期化
+              </Button>
+            </Flex>
 
             <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6}>
               <VStack align="stretch">
