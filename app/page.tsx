@@ -166,6 +166,26 @@ export default function Home() {
                   min={0}
                   max={20}
                 />
+                <HStack gap={2}>
+                  <Button
+                    onClick={() => setAnnualReturn(prev => Math.max(0, prev - 1))}
+                    colorScheme="blue"
+                    size="sm"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    -1
+                  </Button>
+                  <Button
+                    onClick={() => setAnnualReturn(prev => Math.min(20, prev + 1))}
+                    colorScheme="blue"
+                    size="sm"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    +1
+                  </Button>
+                </HStack>
               </VStack>
 
               <VStack align="stretch">
@@ -182,6 +202,26 @@ export default function Home() {
                   min={0}
                   max={20}
                 />
+                <HStack gap={2}>
+                  <Button
+                    onClick={() => setDividendYield(prev => Math.max(0, prev - 1))}
+                    colorScheme="blue"
+                    size="sm"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    -1
+                  </Button>
+                  <Button
+                    onClick={() => setDividendYield(prev => Math.min(20, prev + 1))}
+                    colorScheme="blue"
+                    size="sm"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    +1
+                  </Button>
+                </HStack>
               </VStack>
             </SimpleGrid>
           </Card.Body>
