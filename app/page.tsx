@@ -320,17 +320,6 @@ export default function Home() {
           </Card.Body>
         </Card.Root>
 
-        <Card.Root>
-          <Card.Body p={6}>
-            <Heading as="h2" size="lg" mb={3}>ポイント</Heading>
-            <VStack align="start" gap={2}>
-              <Text>• 毎月{monthlyAmount.toLocaleString()}円を積み立てると、約{Math.round(simulationData.months / 12 * 10) / 10}年で目標の{targetAmount.toLocaleString()}円に到達します</Text>
-              <Text>• 年利{annualReturn}%で運用した場合の試算です</Text>
-              <Text>• 実際の運用成績は市場環境により変動します</Text>
-            </VStack>
-          </Card.Body>
-        </Card.Root>
-
         <Flex justify="center" mt={8}>
           <Link
             href="https://github.com/naofumi-fujii/road-to-fire"
