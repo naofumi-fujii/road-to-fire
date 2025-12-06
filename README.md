@@ -57,11 +57,15 @@ vercel
 
 ## 技術スタック
 
-- Next.js 15
-- React 18
+- Next.js 16
+- React 19
 - TypeScript
-- Tailwind CSS
+- Chakra UI v3
+- Emotion
+- Framer Motion
 - Recharts（グラフ表示）
+- react-icons
+- next-themes
 
 ## ライセンス
 
