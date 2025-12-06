@@ -93,24 +93,42 @@ export default function Home() {
                     }
                   }}
                 />
-                <HStack gap={2}>
+                <HStack gap={1}>
                   <Button
-                    onClick={() => setTargetAmount(prev => prev + 10000)}
+                    onClick={() => setTargetAmount(prev => Math.max(0, prev - 10000))}
                     colorScheme="blue"
-                    size="sm"
+                    size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    +10,000
+                    -1万
+                  </Button>
+                  <Button
+                    onClick={() => setTargetAmount(prev => prev + 10000)}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    +1万
+                  </Button>
+                  <Button
+                    onClick={() => setTargetAmount(prev => Math.max(0, prev - 100000))}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    -10万
                   </Button>
                   <Button
                     onClick={() => setTargetAmount(prev => prev + 100000)}
                     colorScheme="blue"
-                    size="sm"
+                    size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    +100,000
+                    +10万
                   </Button>
                 </HStack>
               </VStack>
@@ -131,24 +149,42 @@ export default function Home() {
                     }
                   }}
                 />
-                <HStack gap={2}>
+                <HStack gap={1}>
                   <Button
-                    onClick={() => setMonthlyAmount(prev => prev + 10000)}
+                    onClick={() => setMonthlyAmount(prev => Math.max(0, prev - 10000))}
                     colorScheme="blue"
-                    size="sm"
+                    size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    +10,000
+                    -1万
+                  </Button>
+                  <Button
+                    onClick={() => setMonthlyAmount(prev => prev + 10000)}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    +1万
+                  </Button>
+                  <Button
+                    onClick={() => setMonthlyAmount(prev => Math.max(0, prev - 100000))}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    -10万
                   </Button>
                   <Button
                     onClick={() => setMonthlyAmount(prev => prev + 100000)}
                     colorScheme="blue"
-                    size="sm"
+                    size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    +100,000
+                    +10万
                   </Button>
                 </HStack>
               </VStack>
