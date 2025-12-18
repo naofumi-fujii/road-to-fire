@@ -55,18 +55,6 @@ vercel
 
 このプロジェクトは環境変数を使用していないため、特別な設定は不要です。
 
-## 技術スタック
-
-- Next.js 16
-- React 19
-- TypeScript
-- Chakra UI v3
-- Emotion
-- Framer Motion
-- Recharts（グラフ表示）
-- react-icons
-- next-themes
-
 ## ライセンス
 
 MIT
