@@ -203,11 +203,11 @@ export default function Home() {
                   min={0}
                   max={20}
                 />
-                <HStack gap={2}>
+                <HStack gap={1}>
                   <Button
                     onClick={() => setAnnualReturn(prev => Math.max(0, prev - 1))}
                     colorScheme="blue"
-                    size="sm"
+                    size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
@@ -216,7 +216,7 @@ export default function Home() {
                   <Button
                     onClick={() => setAnnualReturn(prev => Math.min(20, prev + 1))}
                     colorScheme="blue"
-                    size="sm"
+                    size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
@@ -239,11 +239,11 @@ export default function Home() {
                   min={0}
                   max={20}
                 />
-                <HStack gap={2}>
+                <HStack gap={1}>
                   <Button
                     onClick={() => setDividendYield(prev => Math.max(0, prev - 1))}
                     colorScheme="blue"
-                    size="sm"
+                    size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
@@ -252,7 +252,7 @@ export default function Home() {
                   <Button
                     onClick={() => setDividendYield(prev => Math.min(20, prev + 1))}
                     colorScheme="blue"
-                    size="sm"
+                    size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
