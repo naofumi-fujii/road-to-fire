@@ -1,8 +1,7 @@
-'use client';
-
 import { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ThemeToggle } from './components/ThemeToggle';
+import { Providers } from './providers';
 import {
   Box,
   Container,
@@ -18,7 +17,7 @@ import {
   Link,
 } from '@chakra-ui/react';
 
-export default function Home() {
+function Home() {
   const [targetAmount, setTargetAmount] = useState(12000000); // 目標額（デフォルト1200万円）
   const [monthlyAmount, setMonthlyAmount] = useState(200000); // 毎月の積立額（デフォルト20万円）
   const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
@@ -376,5 +375,13 @@ export default function Home() {
         </Flex>
       </Container>
     </Box>
+  );
+}
+
+export default function App() {
+  return (
+    <Providers>
+      <Home />
+    </Providers>
   );
 }
