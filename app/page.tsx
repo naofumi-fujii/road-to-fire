@@ -58,7 +58,7 @@ export default function Home() {
   }, [monthlyAmount]);
 
   return (
-    <Box minH="100vh" p={8} bgGradient="linear(to-br, blue.50, purple.100)" _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}>
+    <Box minH="100vh" p={8} bgGradient="linear(to-br, navy.50, gold.50)" _dark={{ bgGradient: "linear(to-br, navy.900, navy.800)" }}>
       <Container maxW="container.xl">
         <Flex justify="space-between" align="center" mb={8}>
           <Box flex={1}>
@@ -96,7 +96,7 @@ export default function Home() {
                 <HStack gap={1}>
                   <Button
                     onClick={() => setTargetAmount(prev => Math.max(0, prev - 10000))}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -105,7 +105,7 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={() => setTargetAmount(prev => prev + 10000)}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -114,7 +114,7 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={() => setTargetAmount(prev => Math.max(0, prev - 100000))}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -123,7 +123,7 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={() => setTargetAmount(prev => prev + 100000)}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -152,7 +152,7 @@ export default function Home() {
                 <HStack gap={1}>
                   <Button
                     onClick={() => setMonthlyAmount(prev => Math.max(0, prev - 10000))}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -161,7 +161,7 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={() => setMonthlyAmount(prev => prev + 10000)}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -170,7 +170,7 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={() => setMonthlyAmount(prev => Math.max(0, prev - 100000))}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -179,7 +179,7 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={() => setMonthlyAmount(prev => prev + 100000)}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -206,7 +206,7 @@ export default function Home() {
                 <HStack gap={1}>
                   <Button
                     onClick={() => setAnnualReturn(prev => Math.max(0, prev - 1))}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -215,7 +215,7 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={() => setAnnualReturn(prev => Math.min(20, prev + 1))}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -242,7 +242,7 @@ export default function Home() {
                 <HStack gap={1}>
                   <Button
                     onClick={() => setDividendYield(prev => Math.max(0, prev - 1))}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -251,7 +251,7 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={() => setDividendYield(prev => Math.min(20, prev + 1))}
-                    colorScheme="blue"
+                    colorPalette="navy"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
@@ -269,36 +269,36 @@ export default function Home() {
             <Heading as="h2" size="xl" mb={4}>シミュレーション結果</Heading>
 
             <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} gap={4} mb={6}>
-              <Box bg="blue.50" _dark={{ bg: "blue.900" }} p={4} borderRadius="lg">
+              <Box bg="navy.50" _dark={{ bg: "navy.900" }} p={4} borderRadius="lg">
                 <Text fontSize="sm" mb={1}>目標達成まで</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="blue.600" _dark={{ color: "blue.400" }}>
+                <Text fontSize="2xl" fontWeight="bold" color="navy.600" _dark={{ color: "navy.400" }}>
                   {simulationData.months}ヶ月
                 </Text>
                 <Text fontSize="sm" color="gray.500">
                   （約{Math.round(simulationData.months / 12 * 10) / 10}年）
                 </Text>
-                <Text fontSize="sm" fontWeight="semibold" color="blue.700" _dark={{ color: "blue.300" }} mt={2}>
+                <Text fontSize="sm" fontWeight="semibold" color="navy.700" _dark={{ color: "navy.300" }} mt={2}>
                   {simulationData.targetDate.getFullYear()}年{simulationData.targetDate.getMonth() + 1}月頃
                 </Text>
               </Box>
 
-              <Box bg="green.50" _dark={{ bg: "green.900" }} p={4} borderRadius="lg">
+              <Box bg="emerald.50" _dark={{ bg: "emerald.900" }} p={4} borderRadius="lg">
                 <Text fontSize="sm" mb={1}>総投資額</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="green.600" _dark={{ color: "green.400" }}>
+                <Text fontSize="2xl" fontWeight="bold" color="emerald.600" _dark={{ color: "emerald.400" }}>
                   {(monthlyAmount * simulationData.months).toLocaleString()}円
                 </Text>
               </Box>
 
-              <Box bg="purple.50" _dark={{ bg: "purple.900" }} p={4} borderRadius="lg">
+              <Box bg="gold.50" _dark={{ bg: "gold.900" }} p={4} borderRadius="lg">
                 <Text fontSize="sm" mb={1}>運用益</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="purple.600" _dark={{ color: "purple.400" }}>
+                <Text fontSize="2xl" fontWeight="bold" color="gold.600" _dark={{ color: "gold.400" }}>
                   {Math.round(simulationData.finalAmount - monthlyAmount * simulationData.months).toLocaleString()}円
                 </Text>
               </Box>
 
-              <Box bg="orange.50" _dark={{ bg: "orange.900" }} p={4} borderRadius="lg">
+              <Box bg="emerald.50" _dark={{ bg: "emerald.900" }} p={4} borderRadius="lg">
                 <Text fontSize="sm" mb={1}>毎月の配当額</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="orange.600" _dark={{ color: "orange.400" }}>
+                <Text fontSize="2xl" fontWeight="bold" color="emerald.600" _dark={{ color: "emerald.400" }}>
                   {Math.round(targetAmount * dividendYield / 100 / 12).toLocaleString()}円
                 </Text>
                 <Text fontSize="sm" color="gray.500">
@@ -306,9 +306,9 @@ export default function Home() {
                 </Text>
               </Box>
 
-              <Box bg="teal.50" _dark={{ bg: "teal.900" }} p={4} borderRadius="lg">
+              <Box bg="navy.50" _dark={{ bg: "navy.900" }} p={4} borderRadius="lg">
                 <Text fontSize="sm" mb={1}>年間積立額</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="teal.600" _dark={{ color: "teal.400" }}>
+                <Text fontSize="2xl" fontWeight="bold" color="navy.600" _dark={{ color: "navy.400" }}>
                   {estimatedAnnualIncome.toLocaleString()}円
                 </Text>
                 <Text fontSize="sm" color="gray.500">
@@ -337,7 +337,7 @@ export default function Home() {
                   <Line
                     type="monotone"
                     dataKey="amount"
-                    stroke="#8884d8"
+                    stroke="#10b981"
                     strokeWidth={2}
                     name="資産総額"
                     dot={{ r: 4 }}
@@ -345,7 +345,7 @@ export default function Home() {
                   <Line
                     type="monotone"
                     dataKey="contribution"
-                    stroke="#82ca9d"
+                    stroke="#f59e0b"
                     strokeWidth={2}
                     name="総投資額"
                     dot={{ r: 4 }}
