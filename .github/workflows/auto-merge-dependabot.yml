@@ -1,0 +1,125 @@
+name: Auto-merge Dependabot PRs
+
+on:
+  # CI完了時にトリガー
+  check_suite:
+    types: [completed]
+  # 15分ごとに定期チェック
+  schedule:
+    - cron: '*/15 * * * *'
+  # 手動実行も可能に
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Auto-merge Dependabot PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # オープン中のDependabot PRを取得
+          prs=$(gh pr list --author "app/dependabot" --state open --json number --limit 100)
+
+          # PRが存在しない場合は終了
+          if [ "$prs" = "[]" ]; then
+            echo "No Dependabot PRs found"
+            exit 0
+          fi
+
+          # 現在時刻（Unix timestamp）
+          current_time=$(date +%s)
+
+          # 30分前の時刻（Unix timestamp）
+          threshold_time=$((current_time - 1800))
+
+          echo "$prs" | jq -r '.[].number' | while read -r pr_number; do
+            echo "===================================="
+            echo "Checking PR #$pr_number"
+
+            # PR詳細を取得
+            pr_info=$(gh pr view "$pr_number" --json updatedAt,statusCheckRollup,commits)
+
+            # 最終更新時刻を取得
+            updated_at=$(echo "$pr_info" | jq -r '.updatedAt')
+            updated_timestamp=$(date -d "$updated_at" +%s 2>/dev/null || echo "0")
+
+            # 最新のコミット時刻も確認
+            latest_commit_time=$(echo "$pr_info" | jq -r '.commits[-1].committedDate // .commits[0].committedDate // .updatedAt')
+            latest_commit_timestamp=$(date -d "$latest_commit_time" +%s 2>/dev/null || echo "0")
+
+            # より新しい時刻を使用
+            if [ $latest_commit_timestamp -gt $updated_timestamp ]; then
+              check_timestamp=$latest_commit_timestamp
+              check_time=$latest_commit_time
+            else
+              check_timestamp=$updated_timestamp
+              check_time=$updated_at
+            fi
+
+            # 30分以上経過しているかチェック
+            time_diff=$((current_time - check_timestamp))
+            if [ $check_timestamp -gt $threshold_time ]; then
+              echo "PR #$pr_number: Last activity at $check_time (${time_diff}s ago) - less than 30 minutes, skipping"
+              continue
+            fi
+
+            echo "PR #$pr_number: Last activity at $check_time (${time_diff}s ago) - more than 30 minutes"
+
+            # ステータスチェックの状態を確認
+            status_checks=$(echo "$pr_info" | jq -r '.statusCheckRollup')
+
+            # ステータスチェックが存在しない場合
+            if [ "$status_checks" = "null" ] || [ "$status_checks" = "[]" ]; then
+              echo "PR #$pr_number: No status checks found, skipping"
+              continue
+            fi
+
+            # 失敗したチェックがあるか確認
+            failed_count=$(echo "$status_checks" | jq '[.[] | select(.conclusion == "FAILURE" or .conclusion == "CANCELLED" or .conclusion == "TIMED_OUT" or .conclusion == "STARTUP_FAILURE")] | length')
+
+            if [ "$failed_count" -gt 0 ]; then
+              echo "PR #$pr_number: Has $failed_count failed checks, skipping"
+              continue
+            fi
+
+            # 待機中またはスキップされたチェックがあるか確認
+            pending_count=$(echo "$status_checks" | jq '[.[] | select(.status == "IN_PROGRESS" or .status == "QUEUED" or .status == "PENDING" or .status == "WAITING")] | length')
+
+            if [ "$pending_count" -gt 0 ]; then
+              echo "PR #$pr_number: Has $pending_count pending checks, skipping"
+              continue
+            fi
+
+            # 成功したチェックの数を確認
+            success_count=$(echo "$status_checks" | jq '[.[] | select(.conclusion == "SUCCESS")] | length')
+            total_count=$(echo "$status_checks" | jq 'length')
+
+            echo "PR #$pr_number: Status checks: $success_count/$total_count successful"
+
+            # すべてのチェックが成功している場合のみマージ
+            if [ "$success_count" -eq "$total_count" ] && [ "$total_count" -gt 0 ]; then
+              echo "PR #$pr_number: All conditions met, attempting to merge..."
+
+              # マージを実行（squash merge）
+              if gh pr merge "$pr_number" --squash --auto; then
+                echo "PR #$pr_number: Successfully enabled auto-merge"
+              elif gh pr merge "$pr_number" --squash; then
+                echo "PR #$pr_number: Successfully merged"
+              else
+                echo "PR #$pr_number: Failed to merge"
+              fi
+            else
+              echo "PR #$pr_number: Not all checks are successful, skipping"
+            fi
+          done
+
+          echo "===================================="
+          echo "Auto-merge check completed"
