@@ -330,7 +330,7 @@ export default function Home() {
                     label={{ value: '金額（円）', angle: -90, position: 'insideLeft' }}
                   />
                   <Tooltip
-                    formatter={(value: number) => `${value.toLocaleString()}円`}
+                    formatter={(value?: number) => `${(value ?? 0).toLocaleString()}円`}
                     labelFormatter={(label) => `${label}ヶ月後`}
                   />
                   <Legend wrapperStyle={{ paddingTop: '20px' }} />
