@@ -95,40 +95,40 @@ export default function Home() {
                 />
                 <HStack gap={1}>
                   <Button
-                    onClick={() => setTargetAmount(prev => Math.max(0, prev - 10000))}
+                    onClick={() => setTargetAmount(prev => prev * 2)}
                     colorScheme="blue"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    -1万
+                    ×2
                   </Button>
                   <Button
-                    onClick={() => setTargetAmount(prev => prev + 10000)}
+                    onClick={() => setTargetAmount(prev => Math.max(0, Math.floor(prev / 2)))}
                     colorScheme="blue"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    +1万
+                    ÷2
                   </Button>
                   <Button
-                    onClick={() => setTargetAmount(prev => Math.max(0, prev - 100000))}
+                    onClick={() => setTargetAmount(prev => Math.max(0, prev - 1000000))}
                     colorScheme="blue"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    -10万
+                    -100万
                   </Button>
                   <Button
-                    onClick={() => setTargetAmount(prev => prev + 100000)}
+                    onClick={() => setTargetAmount(prev => prev + 1000000)}
                     colorScheme="blue"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    +10万
+                    +100万
                   </Button>
                 </HStack>
               </VStack>
