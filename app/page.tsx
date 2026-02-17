@@ -31,15 +31,23 @@ export default function Home() {
     const monthlyReturn = annualReturn / 100 / 12; // 月利
     let month = 0;
 
+    const now = new Date();
+
     // 目標額に達するまで、または最大30年（360ヶ月）まで計算
     while (currentAmount < targetAmount && month < 360) {
       // 利息を加算
       currentAmount = currentAmount * (1 + monthlyReturn) + monthlyAmount;
       month++;
 
+      // 年月ラベルを計算
+      const futureDate = new Date(now.getFullYear(), now.getMonth() + month);
+      const yearStr = futureDate.getFullYear();
+      const monthStr = String(futureDate.getMonth() + 1).padStart(2, '0');
+
       // 毎月データポイントを追加
       data.push({
         month: month,
+        monthLabel: `${yearStr}/${monthStr}`,
         amount: Math.round(currentAmount),
         contribution: monthlyAmount * month,
       });
@@ -322,8 +330,8 @@ export default function Home() {
                 <LineChart data={simulationData.data}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
-                    dataKey="month"
-                    label={{ value: '月数', position: 'insideBottom', offset: -5 }}
+                    dataKey="monthLabel"
+                    label={{ value: '年月', position: 'insideBottom', offset: -5 }}
                   />
                   <YAxis
                     tickFormatter={(value) => `${(value / 10000).toFixed(0)}万`}
@@ -331,7 +339,7 @@ export default function Home() {
                   />
                   <Tooltip
                     formatter={(value?: number) => `${(value ?? 0).toLocaleString()}円`}
-                    labelFormatter={(label) => `${label}ヶ月後`}
+                    labelFormatter={(label) => `${label}`}
                   />
                   <Legend wrapperStyle={{ paddingTop: '20px' }} />
                   <Line
