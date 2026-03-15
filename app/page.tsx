@@ -295,6 +295,9 @@ export default function Home() {
                 <Text fontSize="2xl" fontWeight="bold" color="green.600" _dark={{ color: "green.400" }}>
                   {(monthlyAmount * simulationData.months).toLocaleString()}円
                 </Text>
+                <Text fontSize="sm" color="gray.500">
+                  （毎月の積立額×達成月数）
+                </Text>
               </Box>
 
               <Box bg="purple.50" _dark={{ bg: "purple.900" }} p={4} borderRadius="lg">
