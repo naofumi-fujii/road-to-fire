@@ -295,6 +295,9 @@ export default function Home() {
                 <Text fontSize="2xl" fontWeight="bold" color="green.600" _dark={{ color: "green.400" }}>
                   {(monthlyAmount * simulationData.months).toLocaleString()}円
                 </Text>
+                <Text fontSize="sm" color="gray.500">
+                  （毎月の積立額×達成月数）
+                </Text>
               </Box>
 
               <Box bg="purple.50" _dark={{ bg: "purple.900" }} p={4} borderRadius="lg">
@@ -338,7 +341,7 @@ export default function Home() {
                     label={{ value: '金額（円）', angle: -90, position: 'insideLeft' }}
                   />
                   <Tooltip
-                    formatter={(value?: number) => `${(value ?? 0).toLocaleString()}円`}
+                    formatter={(value: string | number) => `${Number(value).toLocaleString()}円`}
                     labelFormatter={(label) => `${label}`}
                   />
                   <Legend wrapperStyle={{ paddingTop: '20px' }} />
