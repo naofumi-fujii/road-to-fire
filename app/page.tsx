@@ -20,7 +20,7 @@ import {
 
 export default function Home() {
   const [targetAmount, setTargetAmount] = useState(12000000); // 目標額（デフォルト1200万円）
-  const [monthlyAmount, setMonthlyAmount] = useState(300000); // 毎月の積立額（デフォルト30万円）
+  const [monthlyAmount, setMonthlyAmount] = useState(200000); // 毎月の積立額（デフォルト20万円）
   const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
   const [dividendYield, setDividendYield] = useState(5); // 配当利回り（デフォルト5%）
 
@@ -338,7 +338,7 @@ export default function Home() {
                     label={{ value: '金額（円）', angle: -90, position: 'insideLeft' }}
                   />
                   <Tooltip
-                    formatter={(value) => `${Number(value ?? 0).toLocaleString()}円`}
+                    formatter={(value?: number) => `${(value ?? 0).toLocaleString()}円`}
                     labelFormatter={(label) => `${label}`}
                   />
                   <Legend wrapperStyle={{ paddingTop: '20px' }} />
