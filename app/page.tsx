@@ -103,22 +103,22 @@ export default function Home() {
                 />
                 <HStack gap={1}>
                   <Button
-                    onClick={() => setTargetAmount(prev => prev * 2)}
+                    onClick={() => setTargetAmount(prev => Math.max(0, prev - 10000000))}
                     colorScheme="blue"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    ×2
+                    -1000万
                   </Button>
                   <Button
-                    onClick={() => setTargetAmount(prev => Math.max(0, Math.floor(prev / 2)))}
+                    onClick={() => setTargetAmount(prev => prev + 10000000)}
                     colorScheme="blue"
                     size="xs"
                     flex={1}
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
-                    ÷2
+                    +1000万
                   </Button>
                   <Button
                     onClick={() => setTargetAmount(prev => Math.max(0, prev - 1000000))}
