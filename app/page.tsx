@@ -19,7 +19,8 @@ import {
 } from '@chakra-ui/react';
 
 export default function Home() {
-  const [targetAmount, setTargetAmount] = useState(12000000); // 目標額（デフォルト1200万円）
+  const [targetAmount, setTargetAmount] = useState(48000000); // 目標額（デフォルト4800万円）
+  const [currentSavings, setCurrentSavings] = useState(12000000); // 現在の貯蓄額（デフォルト1200万円）
   const [monthlyAmount, setMonthlyAmount] = useState(300000); // 毎月の積立額（デフォルト30万円）
   const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
   const [dividendYield, setDividendYield] = useState(5); // 配当利回り（デフォルト5%）
@@ -27,7 +28,7 @@ export default function Home() {
   // 積立シミュレーションの計算
   const simulationData = useMemo(() => {
     const data = [];
-    let currentAmount = 0;
+    let currentAmount = currentSavings;
     const monthlyReturn = annualReturn / 100 / 12; // 月利
     let month = 0;
 
@@ -58,7 +59,7 @@ export default function Home() {
     targetDate.setMonth(targetDate.getMonth() + month);
 
     return { data, months: month, finalAmount: currentAmount, targetDate };
-  }, [targetAmount, monthlyAmount, annualReturn]);
+  }, [targetAmount, currentSavings, monthlyAmount, annualReturn]);
 
   // 年間積立額の計算
   const estimatedAnnualIncome = useMemo(() => {
@@ -84,7 +85,7 @@ export default function Home() {
           <Card.Body p={6}>
             <Heading as="h2" size="xl" mb={6}>設定</Heading>
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} gap={6}>
               <VStack align="stretch">
                 <Text fontSize="sm" fontWeight="medium" mb={2}>
                   目標金額（円）
@@ -131,6 +132,62 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={() => setTargetAmount(prev => prev + 1000000)}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    +100万
+                  </Button>
+                </HStack>
+              </VStack>
+
+              <VStack align="stretch">
+                <Text fontSize="sm" fontWeight="medium" mb={2}>
+                  現在の貯蓄額（円）
+                </Text>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={currentSavings.toLocaleString()}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/,/g, '');
+                    if (!isNaN(Number(value))) {
+                      setCurrentSavings(Number(value));
+                    }
+                  }}
+                />
+                <HStack gap={1}>
+                  <Button
+                    onClick={() => setCurrentSavings(prev => Math.max(0, prev - 10000000))}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    -1000万
+                  </Button>
+                  <Button
+                    onClick={() => setCurrentSavings(prev => prev + 10000000)}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    +1000万
+                  </Button>
+                  <Button
+                    onClick={() => setCurrentSavings(prev => Math.max(0, prev - 1000000))}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    -100万
+                  </Button>
+                  <Button
+                    onClick={() => setCurrentSavings(prev => prev + 1000000)}
                     colorScheme="blue"
                     size="xs"
                     flex={1}
