@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useTheme } from 'next-themes';
 import { ThemeToggle } from './components/ThemeToggle';
 import {
   Box,
@@ -19,6 +20,9 @@ import {
 } from '@chakra-ui/react';
 
 export default function Home() {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
   const [targetAmount, setTargetAmount] = useState(48000000); // 目標額（デフォルト4800万円）
   const [currentSavings, setCurrentSavings] = useState(12000000); // 現在の貯蓄額（デフォルト1200万円）
   const [monthlyAmount, setMonthlyAmount] = useState(300000); // 毎月の積立額（デフォルト30万円）
@@ -397,6 +401,18 @@ export default function Home() {
                   <Tooltip
                     formatter={(value) => `${Number(value ?? 0).toLocaleString()}円`}
                     labelFormatter={(label) => `${label}`}
+                    contentStyle={{
+                      backgroundColor: isDark ? '#1A202C' : '#FFFFFF',
+                      borderColor: isDark ? '#4A5568' : '#E2E8F0',
+                      color: isDark ? '#E2E8F0' : '#1A202C',
+                      borderRadius: '8px',
+                    }}
+                    labelStyle={{
+                      color: isDark ? '#A0AEC0' : '#4A5568',
+                    }}
+                    itemStyle={{
+                      color: isDark ? '#E2E8F0' : '#1A202C',
+                    }}
                   />
                   <Legend wrapperStyle={{ paddingTop: '20px' }} />
                   <Line
