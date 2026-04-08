@@ -32,16 +32,16 @@ export default function Home() {
   // 積立シミュレーションの計算
   const simulationData = useMemo(() => {
     const data = [];
-    let currentAmount = currentSavings;
+    let investmentAmount = 0; // 積立額と運用益（年利が適用される部分）
     const monthlyReturn = annualReturn / 100 / 12; // 月利
     let month = 0;
 
     const now = new Date();
 
     // 目標額に達するまで、または最大30年（360ヶ月）まで計算
-    while (currentAmount < targetAmount && month < 360) {
-      // 利息を加算
-      currentAmount = currentAmount * (1 + monthlyReturn) + monthlyAmount;
+    while (currentSavings + investmentAmount < targetAmount && month < 360) {
+      // 利息は積立部分のみに適用（貯蓄額には適用しない）
+      investmentAmount = investmentAmount * (1 + monthlyReturn) + monthlyAmount;
       month++;
 
       // 年月ラベルを計算
@@ -50,11 +50,12 @@ export default function Home() {
       const monthStr = String(futureDate.getMonth() + 1).padStart(2, '0');
 
       // 毎月データポイントを追加
+      const totalAmount = currentSavings + investmentAmount;
       data.push({
         month: month,
         monthLabel: `${yearStr}/${monthStr}`,
-        amount: Math.round(currentAmount),
-        contribution: monthlyAmount * month,
+        amount: Math.round(totalAmount),
+        contribution: currentSavings + monthlyAmount * month,
       });
     }
 
@@ -62,7 +63,7 @@ export default function Home() {
     const targetDate = new Date();
     targetDate.setMonth(targetDate.getMonth() + month);
 
-    return { data, months: month, finalAmount: currentAmount, targetDate };
+    return { data, months: month, finalAmount: currentSavings + investmentAmount, targetDate };
   }, [targetAmount, currentSavings, monthlyAmount, annualReturn]);
 
   // 年間積立額の計算
@@ -354,14 +355,14 @@ export default function Home() {
               <Box bg="green.50" _dark={{ bg: "green.900" }} p={4} borderRadius="lg">
                 <Text fontSize="sm" mb={1}>総投資額</Text>
                 <Text fontSize="2xl" fontWeight="bold" color="green.600" _dark={{ color: "green.400" }}>
-                  {(monthlyAmount * simulationData.months).toLocaleString()}円
+                  {(currentSavings + monthlyAmount * simulationData.months).toLocaleString()}円
                 </Text>
               </Box>
 
               <Box bg="purple.50" _dark={{ bg: "purple.900" }} p={4} borderRadius="lg">
                 <Text fontSize="sm" mb={1}>運用益</Text>
                 <Text fontSize="2xl" fontWeight="bold" color="purple.600" _dark={{ color: "purple.400" }}>
-                  {Math.round(simulationData.finalAmount - monthlyAmount * simulationData.months).toLocaleString()}円
+                  {Math.round(simulationData.finalAmount - currentSavings - monthlyAmount * simulationData.months).toLocaleString()}円
                 </Text>
               </Box>
 
