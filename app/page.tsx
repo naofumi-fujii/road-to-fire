@@ -369,10 +369,10 @@ export default function Home() {
               <Box bg="orange.50" _dark={{ bg: "orange.900" }} p={4} borderRadius="lg">
                 <Text fontSize="sm" mb={1}>毎月の配当額</Text>
                 <Text fontSize="2xl" fontWeight="bold" color="orange.600" _dark={{ color: "orange.400" }}>
-                  {Math.round(targetAmount * dividendYield / 100 / 12).toLocaleString()}円
+                  {Math.round(currentSavings * dividendYield / 100 / 12).toLocaleString()}円
                 </Text>
                 <Text fontSize="sm" color="gray.500">
-                  （目標額×配当利回り÷12）
+                  （現在の貯蓄額×配当利回り÷12）
                 </Text>
               </Box>
 
