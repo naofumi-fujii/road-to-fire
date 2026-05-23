@@ -22,15 +22,33 @@ import {
 // 上場株式の配当にかかる税率（所得税15.315% + 住民税5%）
 const DIVIDEND_TAX_RATE = 0.20315;
 
+// 入力項目のデフォルト値（初期化ボタンで使用）
+const DEFAULTS = {
+  currentSavings: 14000000, // 現在の貯蓄額（1400万円）
+  monthlyAmount: 300000, // 毎月の積立額（30万円）
+  annualReturn: 5, // 年利（%）
+  dividendYield: 5, // 配当利回り（%）
+  targetMonthlyDividend: 200000, // 目標の毎月配当額（20万円）
+};
+
 export default function Home() {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
-  const [currentSavings, setCurrentSavings] = useState(14000000); // 現在の貯蓄額（デフォルト1400万円）
-  const [monthlyAmount, setMonthlyAmount] = useState(300000); // 毎月の積立額（デフォルト30万円）
-  const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
-  const [dividendYield, setDividendYield] = useState(5); // 配当利回り（デフォルト5%）
-  const [targetMonthlyDividend, setTargetMonthlyDividend] = useState(200000); // 目標の毎月配当額（デフォルト20万円）
+  const [currentSavings, setCurrentSavings] = useState(DEFAULTS.currentSavings);
+  const [monthlyAmount, setMonthlyAmount] = useState(DEFAULTS.monthlyAmount);
+  const [annualReturn, setAnnualReturn] = useState(DEFAULTS.annualReturn);
+  const [dividendYield, setDividendYield] = useState(DEFAULTS.dividendYield);
+  const [targetMonthlyDividend, setTargetMonthlyDividend] = useState(DEFAULTS.targetMonthlyDividend);
+
+  // すべての入力値をデフォルトに戻す
+  const handleReset = () => {
+    setCurrentSavings(DEFAULTS.currentSavings);
+    setMonthlyAmount(DEFAULTS.monthlyAmount);
+    setAnnualReturn(DEFAULTS.annualReturn);
+    setDividendYield(DEFAULTS.dividendYield);
+    setTargetMonthlyDividend(DEFAULTS.targetMonthlyDividend);
+  };
 
   // 毎月配当シミュレーション（目標の毎月配当額から必要な資産額を逆算）
   const dividendSimulation = useMemo(() => {
@@ -250,7 +268,18 @@ export default function Home() {
 
         <Card.Root mb={8}>
           <Card.Body p={6}>
-            <Heading as="h2" size="xl" mb={6}>設定</Heading>
+            <Flex justify="space-between" align="center" mb={6}>
+              <Heading as="h2" size="xl">設定</Heading>
+              <Button
+                onClick={handleReset}
+                size="sm"
+                variant="outline"
+                colorScheme="gray"
+                _dark={{ borderColor: "gray.600", color: "gray.300", _hover: { bg: "gray.700" } }}
+              >
+                初期化
+              </Button>
+            </Flex>
 
             <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6}>
               <VStack align="stretch">
