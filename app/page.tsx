@@ -102,6 +102,165 @@ export default function Home() {
 
         <Card.Root mb={8}>
           <Card.Body p={6}>
+            <Heading as="h2" size="xl" mb={1}>毎月配当シミュレーション</Heading>
+            <Text fontSize="sm" color="gray.500" mb={6}>
+              毎月受け取りたい配当額から、必要な資産額を逆算します
+            </Text>
+
+            <SimpleGrid columns={{ base: 1, lg: 2 }} gap={6}>
+              <VStack align="stretch" gap={2}>
+                <Text fontSize="sm" fontWeight="medium">
+                  目標の毎月配当額（円）
+                </Text>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={targetMonthlyDividend.toLocaleString()}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/,/g, '');
+                    if (!isNaN(Number(value))) {
+                      setTargetMonthlyDividend(Math.max(0, Number(value)));
+                    }
+                  }}
+                />
+                <HStack gap={1}>
+                  <Button
+                    onClick={() => setTargetMonthlyDividend(prev => Math.max(0, prev - 100000))}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    -10万
+                  </Button>
+                  <Button
+                    onClick={() => setTargetMonthlyDividend(prev => Math.max(0, prev - 10000))}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    -1万
+                  </Button>
+                  <Button
+                    onClick={() => setTargetMonthlyDividend(prev => prev + 10000)}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    +1万
+                  </Button>
+                  <Button
+                    onClick={() => setTargetMonthlyDividend(prev => prev + 100000)}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    +10万
+                  </Button>
+                </HStack>
+                <Text fontSize="sm" color="gray.500" mt={2}>
+                  配当利回り {dividendYield}%（「設定」で変更できます）
+                </Text>
+
+                <Box mt={3}>
+                  <Flex justify="space-between" mb={1}>
+                    <Text fontSize="xs" color="gray.500">
+                      現在の貯蓄額（{currentSavings.toLocaleString()}円）での達成率
+                    </Text>
+                    <Text fontSize="xs" fontWeight="semibold">
+                      {dividendSimulation.progress.toFixed(1)}%
+                    </Text>
+                  </Flex>
+                  <Box bg="gray.200" _dark={{ bg: "gray.700" }} borderRadius="full" h="10px" overflow="hidden">
+                    <Box
+                      bg="orange.400"
+                      h="100%"
+                      w={`${dividendSimulation.progress}%`}
+                      borderRadius="full"
+                      transition="width 0.3s"
+                    />
+                  </Box>
+                </Box>
+              </VStack>
+
+              <Box
+                bg="orange.50"
+                _dark={{ bg: "orange.900" }}
+                p={6}
+                borderRadius="lg"
+                display="flex"
+                flexDirection="column"
+                justifyContent="center"
+              >
+                <Text fontSize="sm" mb={1}>必要な資産額（税引前）</Text>
+                {dividendYield > 0 ? (
+                  <>
+                    <Text
+                      fontSize="4xl"
+                      fontWeight="bold"
+                      color="orange.600"
+                      _dark={{ color: "orange.400" }}
+                      lineHeight="1.1"
+                    >
+                      {Math.round(dividendSimulation.requiredAmount).toLocaleString()}円
+                    </Text>
+                    <Text fontSize="sm" color="gray.600" _dark={{ color: "gray.400" }} mt={2}>
+                      配当利回り{dividendYield}%で毎月{targetMonthlyDividend.toLocaleString()}円の配当を受け取るには、これだけの資産が必要です。
+                    </Text>
+                    <Button
+                      mt={4}
+                      size="sm"
+                      bg="orange.500"
+                      color="white"
+                      _hover={{ bg: "orange.600" }}
+                      _dark={{ bg: "gray.700", color: "orange.300", _hover: { bg: "gray.600" } }}
+                      onClick={() => setTargetAmount(Math.round(dividendSimulation.requiredAmount))}
+                    >
+                      この金額を目標金額にセット
+                    </Button>
+                  </>
+                ) : (
+                  <Text fontSize="lg" fontWeight="medium" color="gray.500" mt={2}>
+                    「設定」で配当利回りを入力してください
+                  </Text>
+                )}
+              </Box>
+            </SimpleGrid>
+
+            <SimpleGrid columns={{ base: 1, md: 3 }} gap={4} mt={6}>
+              <Box bg="teal.50" _dark={{ bg: "teal.900" }} p={4} borderRadius="lg">
+                <Text fontSize="sm" mb={1}>年間配当額（税引前）</Text>
+                <Text fontSize="2xl" fontWeight="bold" color="teal.600" _dark={{ color: "teal.400" }}>
+                  {dividendSimulation.annualDividend.toLocaleString()}円
+                </Text>
+                <Text fontSize="sm" color="gray.500">（毎月の配当額×12）</Text>
+              </Box>
+
+              <Box bg="green.50" _dark={{ bg: "green.900" }} p={4} borderRadius="lg">
+                <Text fontSize="sm" mb={1}>税引後の毎月配当額（手取り）</Text>
+                <Text fontSize="2xl" fontWeight="bold" color="green.600" _dark={{ color: "green.400" }}>
+                  {Math.round(dividendSimulation.afterTaxMonthly).toLocaleString()}円
+                </Text>
+                <Text fontSize="sm" color="gray.500">（税率20.315%で計算）</Text>
+              </Box>
+
+              <Box bg="blue.50" _dark={{ bg: "blue.900" }} p={4} borderRadius="lg">
+                <Text fontSize="sm" mb={1}>目標までの不足額</Text>
+                <Text fontSize="2xl" fontWeight="bold" color="blue.600" _dark={{ color: "blue.400" }}>
+                  {Math.round(dividendSimulation.shortfall).toLocaleString()}円
+                </Text>
+                <Text fontSize="sm" color="gray.500">（必要な資産額−現在の貯蓄額）</Text>
+              </Box>
+            </SimpleGrid>
+          </Card.Body>
+        </Card.Root>
+
+        <Card.Root mb={8}>
+          <Card.Body p={6}>
             <Heading as="h2" size="xl" mb={6}>設定</Heading>
 
             <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} gap={6}>
@@ -344,165 +503,6 @@ export default function Home() {
                   </Button>
                 </HStack>
               </VStack>
-            </SimpleGrid>
-          </Card.Body>
-        </Card.Root>
-
-        <Card.Root mb={8}>
-          <Card.Body p={6}>
-            <Heading as="h2" size="xl" mb={1}>毎月配当シミュレーション</Heading>
-            <Text fontSize="sm" color="gray.500" mb={6}>
-              毎月受け取りたい配当額から、必要な資産額を逆算します
-            </Text>
-
-            <SimpleGrid columns={{ base: 1, lg: 2 }} gap={6}>
-              <VStack align="stretch" gap={2}>
-                <Text fontSize="sm" fontWeight="medium">
-                  目標の毎月配当額（円）
-                </Text>
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  value={targetMonthlyDividend.toLocaleString()}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/,/g, '');
-                    if (!isNaN(Number(value))) {
-                      setTargetMonthlyDividend(Math.max(0, Number(value)));
-                    }
-                  }}
-                />
-                <HStack gap={1}>
-                  <Button
-                    onClick={() => setTargetMonthlyDividend(prev => Math.max(0, prev - 100000))}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    -10万
-                  </Button>
-                  <Button
-                    onClick={() => setTargetMonthlyDividend(prev => Math.max(0, prev - 10000))}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    -1万
-                  </Button>
-                  <Button
-                    onClick={() => setTargetMonthlyDividend(prev => prev + 10000)}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    +1万
-                  </Button>
-                  <Button
-                    onClick={() => setTargetMonthlyDividend(prev => prev + 100000)}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    +10万
-                  </Button>
-                </HStack>
-                <Text fontSize="sm" color="gray.500" mt={2}>
-                  配当利回り {dividendYield}%（「設定」で変更できます）
-                </Text>
-
-                <Box mt={3}>
-                  <Flex justify="space-between" mb={1}>
-                    <Text fontSize="xs" color="gray.500">
-                      現在の貯蓄額（{currentSavings.toLocaleString()}円）での達成率
-                    </Text>
-                    <Text fontSize="xs" fontWeight="semibold">
-                      {dividendSimulation.progress.toFixed(1)}%
-                    </Text>
-                  </Flex>
-                  <Box bg="gray.200" _dark={{ bg: "gray.700" }} borderRadius="full" h="10px" overflow="hidden">
-                    <Box
-                      bg="orange.400"
-                      h="100%"
-                      w={`${dividendSimulation.progress}%`}
-                      borderRadius="full"
-                      transition="width 0.3s"
-                    />
-                  </Box>
-                </Box>
-              </VStack>
-
-              <Box
-                bg="orange.50"
-                _dark={{ bg: "orange.900" }}
-                p={6}
-                borderRadius="lg"
-                display="flex"
-                flexDirection="column"
-                justifyContent="center"
-              >
-                <Text fontSize="sm" mb={1}>必要な資産額（税引前）</Text>
-                {dividendYield > 0 ? (
-                  <>
-                    <Text
-                      fontSize="4xl"
-                      fontWeight="bold"
-                      color="orange.600"
-                      _dark={{ color: "orange.400" }}
-                      lineHeight="1.1"
-                    >
-                      {Math.round(dividendSimulation.requiredAmount).toLocaleString()}円
-                    </Text>
-                    <Text fontSize="sm" color="gray.600" _dark={{ color: "gray.400" }} mt={2}>
-                      配当利回り{dividendYield}%で毎月{targetMonthlyDividend.toLocaleString()}円の配当を受け取るには、これだけの資産が必要です。
-                    </Text>
-                    <Button
-                      mt={4}
-                      size="sm"
-                      bg="orange.500"
-                      color="white"
-                      _hover={{ bg: "orange.600" }}
-                      _dark={{ bg: "gray.700", color: "orange.300", _hover: { bg: "gray.600" } }}
-                      onClick={() => setTargetAmount(Math.round(dividendSimulation.requiredAmount))}
-                    >
-                      この金額を目標金額にセット
-                    </Button>
-                  </>
-                ) : (
-                  <Text fontSize="lg" fontWeight="medium" color="gray.500" mt={2}>
-                    「設定」で配当利回りを入力してください
-                  </Text>
-                )}
-              </Box>
-            </SimpleGrid>
-
-            <SimpleGrid columns={{ base: 1, md: 3 }} gap={4} mt={6}>
-              <Box bg="teal.50" _dark={{ bg: "teal.900" }} p={4} borderRadius="lg">
-                <Text fontSize="sm" mb={1}>年間配当額（税引前）</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="teal.600" _dark={{ color: "teal.400" }}>
-                  {dividendSimulation.annualDividend.toLocaleString()}円
-                </Text>
-                <Text fontSize="sm" color="gray.500">（毎月の配当額×12）</Text>
-              </Box>
-
-              <Box bg="green.50" _dark={{ bg: "green.900" }} p={4} borderRadius="lg">
-                <Text fontSize="sm" mb={1}>税引後の毎月配当額（手取り）</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="green.600" _dark={{ color: "green.400" }}>
-                  {Math.round(dividendSimulation.afterTaxMonthly).toLocaleString()}円
-                </Text>
-                <Text fontSize="sm" color="gray.500">（税率20.315%で計算）</Text>
-              </Box>
-
-              <Box bg="blue.50" _dark={{ bg: "blue.900" }} p={4} borderRadius="lg">
-                <Text fontSize="sm" mb={1}>目標までの不足額</Text>
-                <Text fontSize="2xl" fontWeight="bold" color="blue.600" _dark={{ color: "blue.400" }}>
-                  {Math.round(dividendSimulation.shortfall).toLocaleString()}円
-                </Text>
-                <Text fontSize="sm" color="gray.500">（必要な資産額−現在の貯蓄額）</Text>
-              </Box>
             </SimpleGrid>
           </Card.Body>
         </Card.Root>
