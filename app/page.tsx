@@ -263,63 +263,7 @@ export default function Home() {
           <Card.Body p={6}>
             <Heading as="h2" size="xl" mb={6}>設定</Heading>
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} gap={6}>
-              <VStack align="stretch">
-                <Text fontSize="sm" fontWeight="medium" mb={2}>
-                  目標金額（円）
-                </Text>
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  value={targetAmount.toLocaleString()}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/,/g, '');
-                    if (!isNaN(Number(value))) {
-                      setTargetAmount(Number(value));
-                    }
-                  }}
-                />
-                <HStack gap={1}>
-                  <Button
-                    onClick={() => setTargetAmount(prev => Math.max(0, prev - 10000000))}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    -1000万
-                  </Button>
-                  <Button
-                    onClick={() => setTargetAmount(prev => prev + 10000000)}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    +1000万
-                  </Button>
-                  <Button
-                    onClick={() => setTargetAmount(prev => Math.max(0, prev - 1000000))}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    -100万
-                  </Button>
-                  <Button
-                    onClick={() => setTargetAmount(prev => prev + 1000000)}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    +100万
-                  </Button>
-                </HStack>
-              </VStack>
-
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6}>
               <VStack align="stretch">
                 <Text fontSize="sm" fontWeight="medium" mb={2}>
                   現在の貯蓄額（円）
