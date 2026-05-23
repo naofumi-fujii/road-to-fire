@@ -27,7 +27,7 @@ export default function Home() {
   const isDark = resolvedTheme === 'dark';
 
   const [targetAmount, setTargetAmount] = useState(48000000); // 目標額（デフォルト4800万円）
-  const [currentSavings, setCurrentSavings] = useState(12000000); // 現在の貯蓄額（デフォルト1200万円）
+  const [currentSavings, setCurrentSavings] = useState(14000000); // 現在の貯蓄額（デフォルト1400万円）
   const [monthlyAmount, setMonthlyAmount] = useState(300000); // 毎月の積立額（デフォルト30万円）
   const [annualReturn, setAnnualReturn] = useState(5); // 年利（デフォルト5%）
   const [dividendYield, setDividendYield] = useState(5); // 配当利回り（デフォルト5%）
