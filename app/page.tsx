@@ -22,6 +22,11 @@ import {
 // 上場株式の配当にかかる税率（所得税15.315% + 住民税5%）
 const DIVIDEND_TAX_RATE = 0.20315;
 
+// 現在の年月（計算開始のデフォルト）
+const TODAY = new Date();
+const CURRENT_YEAR = TODAY.getFullYear();
+const CURRENT_MONTH = TODAY.getMonth() + 1; // 1-indexed
+
 // 入力項目のデフォルト値（初期化ボタンで使用）
 const DEFAULTS = {
   currentSavings: 14000000, // 現在の貯蓄額（1400万円）
@@ -29,6 +34,8 @@ const DEFAULTS = {
   annualReturn: 5, // 年利（%）
   dividendYield: 5, // 配当利回り（%）
   targetMonthlyDividend: 200000, // 目標の毎月配当額（20万円）
+  startYear: CURRENT_YEAR, // 計算開始年
+  startMonth: CURRENT_MONTH, // 計算開始月（1-12）
 };
 
 export default function Home() {
@@ -40,6 +47,8 @@ export default function Home() {
   const [annualReturn, setAnnualReturn] = useState(DEFAULTS.annualReturn);
   const [dividendYield, setDividendYield] = useState(DEFAULTS.dividendYield);
   const [targetMonthlyDividend, setTargetMonthlyDividend] = useState(DEFAULTS.targetMonthlyDividend);
+  const [startYear, setStartYear] = useState(DEFAULTS.startYear);
+  const [startMonth, setStartMonth] = useState(DEFAULTS.startMonth);
 
   // すべての入力値をデフォルトに戻す
   const handleReset = () => {
@@ -48,6 +57,8 @@ export default function Home() {
     setAnnualReturn(DEFAULTS.annualReturn);
     setDividendYield(DEFAULTS.dividendYield);
     setTargetMonthlyDividend(DEFAULTS.targetMonthlyDividend);
+    setStartYear(DEFAULTS.startYear);
+    setStartMonth(DEFAULTS.startMonth);
   };
 
   // 毎月配当シミュレーション（目標の毎月配当額から必要な資産額を逆算）
@@ -68,7 +79,8 @@ export default function Home() {
     const monthlyReturn = annualReturn / 100 / 12; // 月利
     let month = 0;
 
-    const now = new Date();
+    // 計算開始日（startYear年startMonth月）
+    const startDate = new Date(startYear, startMonth - 1);
 
     // 目標額に達するまで、または最大30年（360ヶ月）まで計算
     while (currentSavings + investmentAmount < targetAmount && month < 360) {
@@ -77,7 +89,7 @@ export default function Home() {
       month++;
 
       // 年月ラベルを計算
-      const futureDate = new Date(now.getFullYear(), now.getMonth() + month);
+      const futureDate = new Date(startDate.getFullYear(), startDate.getMonth() + month);
       const yearStr = futureDate.getFullYear();
       const monthStr = String(futureDate.getMonth() + 1).padStart(2, '0');
 
@@ -92,11 +104,10 @@ export default function Home() {
     }
 
     // 目標額到達予定日を計算
-    const targetDate = new Date();
-    targetDate.setMonth(targetDate.getMonth() + month);
+    const targetDate = new Date(startDate.getFullYear(), startDate.getMonth() + month);
 
     return { data, months: month, finalAmount: currentSavings + investmentAmount, targetDate };
-  }, [targetAmount, currentSavings, monthlyAmount, annualReturn]);
+  }, [targetAmount, currentSavings, monthlyAmount, annualReturn, startYear, startMonth]);
 
   // 年間積立額の計算
   const estimatedAnnualIncome = useMemo(() => {
@@ -281,7 +292,48 @@ export default function Home() {
               </Button>
             </Flex>
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={6}>
+              <VStack align="stretch">
+                <Text fontSize="sm" fontWeight="medium" mb={2}>
+                  計算開始年月
+                </Text>
+                <HStack gap={2}>
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    value={startYear}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      if (!isNaN(value)) {
+                        setStartYear(value);
+                      }
+                    }}
+                    min={1900}
+                    max={2100}
+                  />
+                  <Text fontSize="sm" color="gray.500">年</Text>
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    value={startMonth}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      if (!isNaN(value) && value >= 1 && value <= 12) {
+                        setStartMonth(value);
+                      }
+                    }}
+                    min={1}
+                    max={12}
+                  />
+                  <Text fontSize="sm" color="gray.500">月</Text>
+                </HStack>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  シミュレーションの起点となる年月（デフォルトは今月）
+                </Text>
+              </VStack>
+
               <VStack align="stretch">
                 <Text fontSize="sm" fontWeight="medium" mb={2}>
                   現在の貯蓄額（円）
@@ -542,10 +594,10 @@ export default function Home() {
                 </Text>
                 <VStack align="stretch" gap={3}>
                   {Array.from({ length: Math.ceil(simulationData.months / 12) }).map((_, yearIndex) => {
-                    const now = new Date();
+                    const baseDate = new Date(startYear, startMonth - 1);
                     const yearStartMonth = yearIndex * 12 + 1;
                     const monthsInThisYear = Math.min(12, simulationData.months - yearIndex * 12);
-                    const startDate = new Date(now.getFullYear(), now.getMonth() + yearStartMonth);
+                    const yearStartDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + yearStartMonth);
                     return (
                       <Flex key={yearIndex} align="center" gap={3} wrap="wrap">
                         <Box
@@ -557,13 +609,13 @@ export default function Home() {
                         >
                           {yearIndex + 1}年目
                           <Text fontSize="xs" color="gray.500" fontWeight="normal">
-                            ({startDate.getFullYear()}年〜)
+                            ({yearStartDate.getFullYear()}年〜)
                           </Text>
                         </Box>
                         <SimpleGrid columns={12} gap={2} flex={1}>
                           {Array.from({ length: monthsInThisYear }).map((_, monthIndex) => {
                             const totalMonthIndex = yearIndex * 12 + monthIndex + 1;
-                            const stampDate = new Date(now.getFullYear(), now.getMonth() + totalMonthIndex);
+                            const stampDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + totalMonthIndex);
                             const isGoal = totalMonthIndex === simulationData.months;
                             return (
                               <Box
