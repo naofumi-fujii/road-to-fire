@@ -471,6 +471,153 @@ export default function Home() {
 
         <Card.Root mb={8}>
           <Card.Body p={6}>
+            <Heading as="h2" size="xl" mb={1}>FIREまでの道のり</Heading>
+            <Text fontSize="sm" color="gray.500" mb={6}>
+              ラジオ体操のスタンプカードのように、毎月1つずつスタンプを集めていきましょう
+            </Text>
+
+            <Box
+              bg="yellow.50"
+              _dark={{ bg: "yellow.900" }}
+              p={6}
+              borderRadius="lg"
+              mb={6}
+              textAlign="center"
+            >
+              <Text fontSize="sm" mb={2} color="gray.600" _dark={{ color: "gray.300" }}>
+                目標達成まで あと
+              </Text>
+              <HStack justify="center" align="baseline" gap={2} flexWrap="wrap">
+                <Text
+                  fontSize="6xl"
+                  fontWeight="bold"
+                  color="orange.600"
+                  _dark={{ color: "orange.300" }}
+                  lineHeight="1"
+                >
+                  {simulationData.months}
+                </Text>
+                <Text fontSize="2xl" fontWeight="semibold">ヶ月</Text>
+                {simulationData.months >= 12 && (
+                  <>
+                    <Text fontSize="xl" color="gray.500" mx={2}>＝</Text>
+                    <Text
+                      fontSize="4xl"
+                      fontWeight="bold"
+                      color="orange.600"
+                      _dark={{ color: "orange.300" }}
+                      lineHeight="1"
+                    >
+                      {Math.floor(simulationData.months / 12)}
+                    </Text>
+                    <Text fontSize="xl" fontWeight="semibold">年</Text>
+                    {simulationData.months % 12 > 0 && (
+                      <>
+                        <Text
+                          fontSize="4xl"
+                          fontWeight="bold"
+                          color="orange.600"
+                          _dark={{ color: "orange.300" }}
+                          lineHeight="1"
+                        >
+                          {simulationData.months % 12}
+                        </Text>
+                        <Text fontSize="xl" fontWeight="semibold">ヶ月</Text>
+                      </>
+                    )}
+                  </>
+                )}
+              </HStack>
+              <Text fontSize="md" color="gray.600" _dark={{ color: "gray.300" }} mt={3}>
+                達成予定: <Text as="span" fontWeight="bold" color="orange.700" _dark={{ color: "orange.200" }}>
+                  {simulationData.targetDate.getFullYear()}年{simulationData.targetDate.getMonth() + 1}月頃
+                </Text>
+              </Text>
+            </Box>
+
+            {simulationData.months > 0 && (
+              <Box mb={6}>
+                <Text fontSize="sm" fontWeight="medium" mb={3} color="gray.600" _dark={{ color: "gray.300" }}>
+                  📻 スタンプカード（1マス = 1ヶ月）
+                </Text>
+                <VStack align="stretch" gap={3}>
+                  {Array.from({ length: Math.ceil(simulationData.months / 12) }).map((_, yearIndex) => {
+                    const now = new Date();
+                    const yearStartMonth = yearIndex * 12 + 1;
+                    const monthsInThisYear = Math.min(12, simulationData.months - yearIndex * 12);
+                    const startDate = new Date(now.getFullYear(), now.getMonth() + yearStartMonth);
+                    return (
+                      <Flex key={yearIndex} align="center" gap={3} wrap="wrap">
+                        <Box
+                          minW="80px"
+                          fontSize="sm"
+                          fontWeight="semibold"
+                          color="gray.600"
+                          _dark={{ color: "gray.300" }}
+                        >
+                          {yearIndex + 1}年目
+                          <Text fontSize="xs" color="gray.500" fontWeight="normal">
+                            ({startDate.getFullYear()}年〜)
+                          </Text>
+                        </Box>
+                        <SimpleGrid columns={12} gap={2} flex={1}>
+                          {Array.from({ length: monthsInThisYear }).map((_, monthIndex) => {
+                            const totalMonthIndex = yearIndex * 12 + monthIndex + 1;
+                            const stampDate = new Date(now.getFullYear(), now.getMonth() + totalMonthIndex);
+                            const isGoal = totalMonthIndex === simulationData.months;
+                            return (
+                              <Box
+                                key={monthIndex}
+                                aspectRatio={1}
+                                borderRadius="full"
+                                border="2px dashed"
+                                borderColor={isGoal ? "red.400" : "gray.300"}
+                                _dark={{
+                                  borderColor: isGoal ? "red.300" : "gray.600",
+                                  bg: isGoal ? "red.900" : "transparent",
+                                }}
+                                bg={isGoal ? "red.50" : "transparent"}
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                                flexDirection="column"
+                                position="relative"
+                                title={`${stampDate.getFullYear()}年${stampDate.getMonth() + 1}月`}
+                              >
+                                <Text
+                                  fontSize="xs"
+                                  fontWeight={isGoal ? "bold" : "medium"}
+                                  color={isGoal ? "red.600" : "gray.400"}
+                                  _dark={{ color: isGoal ? "red.200" : "gray.500" }}
+                                  lineHeight="1"
+                                >
+                                  {isGoal ? "🎯" : stampDate.getMonth() + 1}
+                                </Text>
+                                {!isGoal && (
+                                  <Text
+                                    fontSize="9px"
+                                    color="gray.400"
+                                    _dark={{ color: "gray.500" }}
+                                    lineHeight="1"
+                                    mt="2px"
+                                  >
+                                    月
+                                  </Text>
+                                )}
+                              </Box>
+                            );
+                          })}
+                        </SimpleGrid>
+                      </Flex>
+                    );
+                  })}
+                </VStack>
+                <Text fontSize="xs" color="gray.500" mt={3}>
+                  ※ 各マスは1ヶ月を表します。毎月の積立を続けて、🎯のマスでFIRE達成です！
+                </Text>
+              </Box>
+            )}
+
             <Heading as="h2" size="xl" mb={4}>シミュレーション結果</Heading>
 
             <SimpleGrid columns={{ base: 1, md: 2, lg: 5 }} gap={4} mb={6}>
