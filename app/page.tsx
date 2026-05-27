@@ -361,15 +361,6 @@ export default function Home() {
                     -1000万
                   </Button>
                   <Button
-                    onClick={() => setCurrentSavings(prev => prev + 10000000)}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    +1000万
-                  </Button>
-                  <Button
                     onClick={() => setCurrentSavings(prev => Math.max(0, prev - 1000000))}
                     colorScheme="blue"
                     size="xs"
@@ -386,6 +377,15 @@ export default function Home() {
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
                     +100万
+                  </Button>
+                  <Button
+                    onClick={() => setCurrentSavings(prev => prev + 10000000)}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    +1000万
                   </Button>
                 </HStack>
               </VStack>
@@ -408,6 +408,15 @@ export default function Home() {
                 />
                 <HStack gap={1}>
                   <Button
+                    onClick={() => setMonthlyAmount(prev => Math.max(0, prev - 100000))}
+                    colorScheme="blue"
+                    size="xs"
+                    flex={1}
+                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
+                  >
+                    -10万
+                  </Button>
+                  <Button
                     onClick={() => setMonthlyAmount(prev => Math.max(0, prev - 10000))}
                     colorScheme="blue"
                     size="xs"
@@ -424,15 +433,6 @@ export default function Home() {
                     _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
                   >
                     +1万
-                  </Button>
-                  <Button
-                    onClick={() => setMonthlyAmount(prev => Math.max(0, prev - 100000))}
-                    colorScheme="blue"
-                    size="xs"
-                    flex={1}
-                    _dark={{ bg: "gray.700", color: "blue.300", _hover: { bg: "gray.600" } }}
-                  >
-                    -10万
                   </Button>
                   <Button
                     onClick={() => setMonthlyAmount(prev => prev + 100000)}
