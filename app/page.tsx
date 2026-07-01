@@ -109,6 +109,18 @@ export default function Home() {
     return { data, months: month, finalAmount: currentSavings + investmentAmount, targetDate };
   }, [targetAmount, currentSavings, monthlyAmount, annualReturn, startYear, startMonth]);
 
+  // グラフ表示用に半年（6ヶ月）ごとへ間引く（最終点＝目標達成月は必ず含める）
+  const chartData = useMemo(() => {
+    const { data } = simulationData;
+    if (data.length === 0) return data;
+    const sampled = data.filter((point) => point.month % 6 === 0);
+    const lastPoint = data[data.length - 1];
+    if (sampled[sampled.length - 1]?.month !== lastPoint.month) {
+      sampled.push(lastPoint);
+    }
+    return sampled;
+  }, [simulationData]);
+
   // 年間積立額の計算
   const estimatedAnnualIncome = useMemo(() => {
     return monthlyAmount * 12;
@@ -637,7 +649,7 @@ export default function Home() {
 
             <Box h="400px">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={simulationData.data}>
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="monthLabel"
