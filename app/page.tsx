@@ -19,8 +19,16 @@ import {
   Link,
 } from '@chakra-ui/react';
 
-// 上場株式の配当にかかる税率（所得税15.315% + 住民税5%）
-const DIVIDEND_TAX_RATE = 0.20315;
+// 投資先ごとの配当税率（app/page.tsx）
+// 国内: 所得税15.315% + 住民税5% = 20.315%
+// 海外（US）: 米国で10%源泉徴収された後、残りに国内20.315%が課税される
+//   実効税率 = 1 - 0.9 × (1 - 0.20315) = 0.282835（外国税額控除・NISAは考慮しない）
+const MARKETS = {
+  domestic: { label: '国内', taxRate: 0.20315, taxRateLabel: '20.315%' },
+  us: { label: '海外（US）', taxRate: 0.282835, taxRateLabel: '28.2835%' },
+} as const;
+
+type MarketKey = keyof typeof MARKETS;
 
 // 現在の年月（計算開始のデフォルト）
 const TODAY = new Date();
@@ -36,6 +44,7 @@ const DEFAULTS = {
   targetMonthlyDividend: 200000, // 目標の毎月配当額（20万円）
   startYear: CURRENT_YEAR, // 計算開始年
   startMonth: CURRENT_MONTH, // 計算開始月（1-12）
+  market: 'domestic' as MarketKey, // 投資先（配当税率の切り替えに使用）
 };
 
 export default function Home() {
@@ -49,6 +58,7 @@ export default function Home() {
   const [targetMonthlyDividend, setTargetMonthlyDividend] = useState(DEFAULTS.targetMonthlyDividend);
   const [startYear, setStartYear] = useState(DEFAULTS.startYear);
   const [startMonth, setStartMonth] = useState(DEFAULTS.startMonth);
+  const [market, setMarket] = useState<MarketKey>(DEFAULTS.market);
 
   // すべての入力値をデフォルトに戻す
   const handleReset = () => {
@@ -59,17 +69,18 @@ export default function Home() {
     setTargetMonthlyDividend(DEFAULTS.targetMonthlyDividend);
     setStartYear(DEFAULTS.startYear);
     setStartMonth(DEFAULTS.startMonth);
+    setMarket(DEFAULTS.market);
   };
 
   // 毎月配当シミュレーション（目標の毎月配当額から必要な資産額を逆算）
   const dividendSimulation = useMemo(() => {
     const annualDividend = targetMonthlyDividend * 12;
     const requiredAmount = dividendYield > 0 ? annualDividend / (dividendYield / 100) : 0;
-    const afterTaxMonthly = targetMonthlyDividend * (1 - DIVIDEND_TAX_RATE);
+    const afterTaxMonthly = targetMonthlyDividend * (1 - MARKETS[market].taxRate);
     const shortfall = Math.max(0, requiredAmount - currentSavings);
     const progress = requiredAmount > 0 ? Math.min(100, (currentSavings / requiredAmount) * 100) : 0;
     return { annualDividend, requiredAmount, afterTaxMonthly, shortfall, progress };
-  }, [targetMonthlyDividend, dividendYield, currentSavings]);
+  }, [targetMonthlyDividend, dividendYield, currentSavings, market]);
 
   // 積立シミュレーションの計算（目標額は配当シミュレーションの必要資産額を使用）
   const targetAmount = Math.round(dividendSimulation.requiredAmount);
@@ -275,7 +286,7 @@ export default function Home() {
                 <Text fontSize="2xl" fontWeight="bold" color="green.600" _dark={{ color: "green.400" }}>
                   {Math.round(dividendSimulation.afterTaxMonthly).toLocaleString()}円
                 </Text>
-                <Text fontSize="sm" color="gray.500">（税率20.315%で計算）</Text>
+                <Text fontSize="sm" color="gray.500">（{MARKETS[market].label}・税率{MARKETS[market].taxRateLabel}で計算）</Text>
               </Box>
 
               <Box bg="blue.50" _dark={{ bg: "blue.900" }} p={4} borderRadius="lg">
@@ -528,6 +539,32 @@ export default function Home() {
                     +1
                   </Button>
                 </HStack>
+              </VStack>
+
+              <VStack align="stretch">
+                <Text fontSize="sm" fontWeight="medium" mb={2}>
+                  投資先（配当税率）
+                </Text>
+                <HStack gap={1}>
+                  {(Object.keys(MARKETS) as MarketKey[]).map((key) => (
+                    <Button
+                      key={key}
+                      onClick={() => setMarket(key)}
+                      colorScheme="blue"
+                      size="sm"
+                      flex={1}
+                      variant={market === key ? 'solid' : 'outline'}
+                      _dark={market === key
+                        ? { bg: "blue.600", color: "white", _hover: { bg: "blue.500" } }
+                        : { borderColor: "gray.600", color: "gray.300", _hover: { bg: "gray.700" } }}
+                    >
+                      {MARKETS[key].label}
+                    </Button>
+                  ))}
+                </HStack>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  国内: 20.315% / 海外（US）: 28.2835%（米国源泉10% + 国内課税20.315%。外国税額控除・NISAは考慮しません）
+                </Text>
               </VStack>
             </SimpleGrid>
           </Card.Body>
