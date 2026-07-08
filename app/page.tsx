@@ -72,12 +72,14 @@ export default function Home() {
     setMarket(DEFAULTS.market);
   };
 
-  // 目標の毎月配当額から必要な資産額を逆算（app/page.tsx requiredAmount）
-  // 積立シミュレーションの目標額として使用する
+  // 目標の毎月配当額（税引後）から必要な資産額を逆算（app/page.tsx requiredAmount）
+  // 目標額は手取り（税引後）とみなし、(1 - 税率) で割り戻して税引前の配当額に換算してから
+  // 配当利回りで必要資産額を逆算する。積立シミュレーションの目標額として使用する
   const requiredAmount = useMemo(() => {
-    const annualDividend = targetMonthlyDividend * 12;
-    return dividendYield > 0 ? annualDividend / (dividendYield / 100) : 0;
-  }, [targetMonthlyDividend, dividendYield]);
+    const taxRate = MARKETS[market].taxRate;
+    const annualDividendBeforeTax = (targetMonthlyDividend / (1 - taxRate)) * 12;
+    return dividendYield > 0 ? annualDividendBeforeTax / (dividendYield / 100) : 0;
+  }, [targetMonthlyDividend, dividendYield, market]);
 
   // 積立シミュレーションの計算（目標額は必要資産額を使用）
   const targetAmount = Math.round(requiredAmount);
@@ -334,7 +336,7 @@ export default function Home() {
 
                   <VStack align="stretch" gap={1}>
                     <Text fontSize="sm" fontWeight="medium">
-                      目標の毎月配当額（円）
+                      目標の毎月配当額（円・税引後）
                     </Text>
                     <Input
                       type="text"
@@ -388,7 +390,7 @@ export default function Home() {
                       </Button>
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      この配当額に必要な資産額（配当利回りから逆算）が目標額になります
+                      税引後（手取り）でこの配当額を得るのに必要な資産額（配当税率・配当利回りから逆算）が目標額になります
                     </Text>
                   </VStack>
 
@@ -593,7 +595,7 @@ export default function Home() {
                         stroke="#ED8936"
                         strokeDasharray="6 4"
                         label={{
-                          value: `目標 ${(targetMonthlyDividend / 10000).toLocaleString()}万円/月`,
+                          value: `目標 ${(targetMonthlyDividend / 10000).toLocaleString()}万円/月（税引後）`,
                           position: 'insideTopRight',
                           fill: '#ED8936',
                           fontSize: 12,
