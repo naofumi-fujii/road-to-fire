@@ -475,7 +475,7 @@ export default function Home() {
                           >
                             <VStack gap={0.5}>
                               <ScenarioIcon size={14} />
-                              <Text fontSize="xs" lineHeight="1.2">配当{scenario.dividendYield}%</Text>
+                              <Text fontSize="xs" lineHeight="1.2">利回り{scenario.dividendYield}%</Text>
                               <Text fontSize="xs" lineHeight="1.2">成長{scenario.growthRate}%</Text>
                             </VStack>
                           </Button>
@@ -527,7 +527,7 @@ export default function Home() {
 
                     <VStack align="stretch" gap={1}>
                       <Text fontSize="sm" fontWeight="medium">
-                        配当利回り（%）
+                        利回り（%）
                       </Text>
                       <Input
                         type="number"
@@ -571,7 +571,7 @@ export default function Home() {
                       </Text>
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      価格成長率 + 配当利回り × (1 − 配当税率)
+                      価格成長率 + 利回り × (1 − 税率)
                     </Text>
                   </Box>
 
