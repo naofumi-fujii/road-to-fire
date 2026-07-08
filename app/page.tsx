@@ -40,7 +40,7 @@ const DEFAULTS = {
   currentSavings: 14000000, // 現在の貯蓄額（1400万円）
   monthlyAmount: 300000, // 毎月の積立額（30万円）
   annualReturn: 5, // 年利（%）
-  dividendYield: 5, // 配当利回り（%）
+  dividendYield: 4, // 配当利回り（%）4%ルールに合わせたデフォルト値
   targetMonthlyDividend: 200000, // 目標の毎月配当額（20万円）
   startYear: CURRENT_YEAR, // 計算開始年
   startMonth: CURRENT_MONTH, // 計算開始月（1-12）
