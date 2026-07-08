@@ -30,6 +30,17 @@ const MARKETS = {
 
 type MarketKey = keyof typeof MARKETS;
 
+// シナリオプリセット（app/page.tsx）
+// 価格成長率と配当利回りの組み合わせを想定商品ごとにまとめたもの
+// 強気: カバードコールETF・BDC等 / 標準: SPYD・J-REIT等 / 保守: 高配当株ポートフォリオ等
+const SCENARIOS = {
+  aggressive: { label: '強気', growthRate: 1, dividendYield: 7, description: '配当7%・成長1%' },
+  standard: { label: '標準', growthRate: 1, dividendYield: 5, description: '配当5%・成長1%' },
+  conservative: { label: '保守', growthRate: 2, dividendYield: 4, description: '配当4%・成長2%' },
+} as const;
+
+type ScenarioKey = keyof typeof SCENARIOS;
+
 // 現在の年月（計算開始のデフォルト）
 const TODAY = new Date();
 const CURRENT_YEAR = TODAY.getFullYear();
@@ -39,8 +50,8 @@ const CURRENT_MONTH = TODAY.getMonth() + 1; // 1-indexed
 const DEFAULTS = {
   currentSavings: 14000000, // 現在の貯蓄額（1400万円）
   monthlyAmount: 300000, // 毎月の積立額（30万円）
-  annualReturn: 5, // 年利（%）
-  dividendYield: 4, // 配当利回り（%）4%ルールに合わせたデフォルト値
+  growthRate: 2, // 価格成長率（%）配当利回り4%との組み合わせで実効年利が約5%になる想定
+  dividendYield: 4, // 配当利回り（%）高配当株ポートフォリオを想定したデフォルト値
   targetMonthlyDividend: 200000, // 目標の毎月配当額（20万円）
   startYear: CURRENT_YEAR, // 計算開始年
   startMonth: CURRENT_MONTH, // 計算開始月（1-12）
@@ -53,7 +64,7 @@ export default function Home() {
 
   const [currentSavings, setCurrentSavings] = useState(DEFAULTS.currentSavings);
   const [monthlyAmount, setMonthlyAmount] = useState(DEFAULTS.monthlyAmount);
-  const [annualReturn, setAnnualReturn] = useState(DEFAULTS.annualReturn);
+  const [growthRate, setGrowthRate] = useState(DEFAULTS.growthRate);
   const [dividendYield, setDividendYield] = useState(DEFAULTS.dividendYield);
   const [targetMonthlyDividend, setTargetMonthlyDividend] = useState(DEFAULTS.targetMonthlyDividend);
   const [startYear, setStartYear] = useState(DEFAULTS.startYear);
@@ -64,7 +75,7 @@ export default function Home() {
   const handleReset = () => {
     setCurrentSavings(DEFAULTS.currentSavings);
     setMonthlyAmount(DEFAULTS.monthlyAmount);
-    setAnnualReturn(DEFAULTS.annualReturn);
+    setGrowthRate(DEFAULTS.growthRate);
     setDividendYield(DEFAULTS.dividendYield);
     setTargetMonthlyDividend(DEFAULTS.targetMonthlyDividend);
     setStartYear(DEFAULTS.startYear);
@@ -81,12 +92,20 @@ export default function Home() {
     return dividendYield > 0 ? annualDividendBeforeTax / (dividendYield / 100) : 0;
   }, [targetMonthlyDividend, dividendYield, market]);
 
+  // 実効年利の計算（app/page.tsx effectiveAnnualReturn）
+  // 価格成長率に、税引後の配当を再投資した分を加えたトータルリターン（%）
+  // 実効年利 = 価格成長率 + 配当利回り × (1 − 配当税率)
+  const effectiveAnnualReturn = useMemo(() => {
+    const taxRate = MARKETS[market].taxRate;
+    return growthRate + dividendYield * (1 - taxRate);
+  }, [growthRate, dividendYield, market]);
+
   // 積立シミュレーションの計算（目標額は必要資産額を使用）
   const targetAmount = Math.round(requiredAmount);
   const simulationData = useMemo(() => {
     const data = [];
-    let investmentAmount = 0; // 積立額と運用益（年利が適用される部分）
-    const monthlyReturn = annualReturn / 100 / 12; // 月利
+    let investmentAmount = 0; // 積立額と運用益（実効年利が適用される部分）
+    const monthlyReturn = effectiveAnnualReturn / 100 / 12; // 月利
     let month = 0;
 
     // 計算開始日（startYear年startMonth月）
@@ -117,7 +136,7 @@ export default function Home() {
     const targetDate = new Date(startDate.getFullYear(), startDate.getMonth() + month);
 
     return { data, months: month, finalAmount: currentSavings + investmentAmount, targetDate };
-  }, [targetAmount, currentSavings, monthlyAmount, annualReturn, startYear, startMonth]);
+  }, [targetAmount, currentSavings, monthlyAmount, effectiveAnnualReturn, startYear, startMonth]);
 
   // グラフ表示用データ（app/page.tsx chartData）
   // 半年（6ヶ月）ごとへ間引き（最終点＝目標達成月は必ず含める）、
@@ -394,25 +413,59 @@ export default function Home() {
                     </Text>
                   </VStack>
 
+                  <VStack align="stretch" gap={1}>
+                    <Text fontSize="sm" fontWeight="medium">
+                      シナリオ
+                    </Text>
+                    <HStack gap={1}>
+                      {(Object.keys(SCENARIOS) as ScenarioKey[]).map((key) => {
+                        const scenario = SCENARIOS[key];
+                        const isActive =
+                          growthRate === scenario.growthRate && dividendYield === scenario.dividendYield;
+                        return (
+                          <Button
+                            key={key}
+                            onClick={() => {
+                              setGrowthRate(scenario.growthRate);
+                              setDividendYield(scenario.dividendYield);
+                            }}
+                            colorScheme="blue"
+                            size="sm"
+                            flex={1}
+                            variant={isActive ? 'solid' : 'outline'}
+                            _dark={isActive
+                              ? { bg: "blue.600", color: "white", _hover: { bg: "blue.500" } }
+                              : { borderColor: "gray.600", color: "gray.300", _hover: { bg: "gray.700" } }}
+                          >
+                            {scenario.label}
+                          </Button>
+                        );
+                      })}
+                    </HStack>
+                    <Text fontSize="xs" color="gray.500">
+                      強気: 配当7%・成長1%（カバードコールETF等）/ 標準: 配当5%・成長1%（SPYD・J-REIT等）/ 保守: 配当4%・成長2%（高配当株等）。選択後も個別に調整できます
+                    </Text>
+                  </VStack>
+
                   <SimpleGrid columns={2} gap={3}>
                     <VStack align="stretch" gap={1}>
                       <Text fontSize="sm" fontWeight="medium">
-                        想定年利（%）
+                        価格成長率（%）
                       </Text>
                       <Input
                         type="number"
                         inputMode="decimal"
                         autoComplete="off"
                         size="sm"
-                        value={annualReturn}
-                        onChange={(e) => setAnnualReturn(Number(e.target.value))}
+                        value={growthRate}
+                        onChange={(e) => setGrowthRate(Number(e.target.value))}
                         step={0.5}
                         min={0}
                         max={20}
                       />
                       <HStack gap={1}>
                         <Button
-                          onClick={() => setAnnualReturn(prev => Math.max(0, prev - 1))}
+                          onClick={() => setGrowthRate(prev => Math.max(0, prev - 1))}
                           colorScheme="blue"
                           size="xs"
                           flex={1}
@@ -421,7 +474,7 @@ export default function Home() {
                           -1
                         </Button>
                         <Button
-                          onClick={() => setAnnualReturn(prev => Math.min(20, prev + 1))}
+                          onClick={() => setGrowthRate(prev => Math.min(20, prev + 1))}
                           colorScheme="blue"
                           size="xs"
                           flex={1}
@@ -469,6 +522,16 @@ export default function Home() {
                       </HStack>
                     </VStack>
                   </SimpleGrid>
+
+                  <Box bg="blue.50" _dark={{ bg: "blue.900" }} p={3} borderRadius="lg">
+                    <Text fontSize="xs" mb={1}>実効年利（配当再投資前提）</Text>
+                    <Text fontSize="lg" fontWeight="bold" color="blue.600" _dark={{ color: "blue.300" }}>
+                      {effectiveAnnualReturn.toFixed(2)}%
+                    </Text>
+                    <Text fontSize="xs" color="gray.500">
+                      価格成長率 + 配当利回り × (1 − 配当税率)。税引後の配当を再投資しながら積み立てる想定で、この利率を資産成長に適用します
+                    </Text>
+                  </Box>
 
                   <VStack align="stretch" gap={1}>
                     <Text fontSize="sm" fontWeight="medium">
