@@ -166,25 +166,43 @@ export default function Home() {
   }, [monthlyAmount]);
 
   return (
-    <Box minH="100vh" p={{ base: 4, md: 6 }} bgGradient="linear(to-br, blue.50, purple.100)" _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}>
+    <Box minH="100vh" p={{ base: 3, md: 4 }} bgGradient="linear(to-br, blue.50, purple.100)" _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}>
       <Container maxW="container.xl">
-        <Flex justify="space-between" align="center" mb={4}>
-          <Box flex={1}>
-            <Heading as="h1" size="xl" textAlign="center">
+        <Flex justify="space-between" align="center" mb={3}>
+          <HStack flex={1} justify="center" align="baseline" gap={3}>
+            <Heading as="h1" size="xl">
               Road to FIRE
             </Heading>
-            <Text textAlign="center" fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color="gray.500">
               積立投資シミュレーター
             </Text>
-          </Box>
-          <ThemeToggle />
+          </HStack>
+          <HStack gap={2}>
+            <Link
+              href="https://github.com/naofumi-fujii/road-to-fire"
+              target="_blank"
+              rel="noopener noreferrer"
+              _hover={{ opacity: 0.7 }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+            </Link>
+            <ThemeToggle />
+          </HStack>
         </Flex>
 
-        <Card.Root mb={8}>
-          <Card.Body p={{ base: 4, md: 6 }}>
+        <Card.Root>
+          <Card.Body p={{ base: 4, md: 5 }}>
             <Flex direction={{ base: 'column', lg: 'row' }} gap={6} align="stretch">
               {/* 左カラム: 設定パネル */}
-              <Box w={{ base: '100%', lg: '340px' }} flexShrink={0}>
+              <Box w={{ base: '100%', lg: '560px' }} flexShrink={0}>
                 <Flex justify="space-between" align="center" mb={3}>
                   <Heading as="h2" size="md">設定</Heading>
                   <Button
@@ -198,7 +216,9 @@ export default function Home() {
                   </Button>
                 </Flex>
 
-                <VStack align="stretch" gap={4}>
+                {/* 設定項目を2列グリッドで配置（app/page.tsx 設定パネル）
+                    ファーストビューに収めるため、縦1列ではなく2列で高さを圧縮している */}
+                <SimpleGrid columns={{ base: 1, sm: 2 }} gap={3}>
                   <VStack align="stretch" gap={1}>
                     <Text fontSize="sm" fontWeight="medium">
                       計算開始年月
@@ -409,7 +429,7 @@ export default function Home() {
                       </Button>
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      税引後（手取り）でこの配当額を得るのに必要な資産額（配当税率・配当利回りから逆算）が目標額になります
+                      税引後でこの配当額を得るのに必要な資産額が目標額になります
                     </Text>
                   </VStack>
 
@@ -443,7 +463,7 @@ export default function Home() {
                       })}
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      強気: 配当7%・成長1%（カバードコールETF等）/ 標準: 配当5%・成長1%（SPYD・J-REIT等）/ 保守: 配当4%・成長2%（高配当株等）。選択後も個別に調整できます
+                      強気: 配当7%・成長1% / 標準: 配当5%・成長1% / 保守: 配当4%・成長2%。選択後も個別に調整できます
                     </Text>
                   </VStack>
 
@@ -523,13 +543,15 @@ export default function Home() {
                     </VStack>
                   </SimpleGrid>
 
-                  <Box bg="blue.50" _dark={{ bg: "blue.900" }} p={3} borderRadius="lg">
-                    <Text fontSize="xs" mb={1}>実効年利（配当再投資前提）</Text>
-                    <Text fontSize="lg" fontWeight="bold" color="blue.600" _dark={{ color: "blue.300" }}>
-                      {effectiveAnnualReturn.toFixed(2)}%
-                    </Text>
+                  <Box bg="blue.50" _dark={{ bg: "blue.900" }} px={3} py={2} borderRadius="lg">
+                    <HStack justify="space-between" align="baseline">
+                      <Text fontSize="xs">実効年利（配当再投資前提）</Text>
+                      <Text fontSize="lg" fontWeight="bold" color="blue.600" _dark={{ color: "blue.300" }}>
+                        {effectiveAnnualReturn.toFixed(2)}%
+                      </Text>
+                    </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      価格成長率 + 配当利回り × (1 − 配当税率)。税引後の配当を再投資しながら積み立てる想定で、この利率を資産成長に適用します
+                      価格成長率 + 配当利回り × (1 − 配当税率)
                     </Text>
                   </Box>
 
@@ -555,10 +577,10 @@ export default function Home() {
                       ))}
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      国内: 20.315% / 海外（US）: 28.2835%（米国源泉10% + 国内課税20.315%。外国税額控除・NISAは考慮しません）
+                      国内: 20.315% / US: 28.2835%（外国税額控除・NISA考慮なし）
                     </Text>
                   </VStack>
-                </VStack>
+                </SimpleGrid>
               </Box>
 
               {/* 右カラム: FIREまでの道のり（達成予測＋月間配当グラフ＋サマリー） */}
@@ -724,24 +746,6 @@ export default function Home() {
           </Card.Body>
         </Card.Root>
 
-        <Flex justify="center" mt={8}>
-          <Link
-            href="https://github.com/naofumi-fujii/road-to-fire"
-            target="_blank"
-            rel="noopener noreferrer"
-            _hover={{ opacity: 0.7 }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-          </Link>
-        </Flex>
       </Container>
     </Box>
   );
