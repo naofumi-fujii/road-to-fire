@@ -113,6 +113,15 @@ export default function Home() {
     // 計算開始日（startYear年startMonth月）
     const startDate = new Date(startYear, startMonth - 1);
 
+    // 0ヶ月目（現在時点）のデータポイント
+    // グラフを積立開始前の現在の状態（貯蓄額のみ）から始めるために追加する
+    data.push({
+      month: 0,
+      monthLabel: `${startDate.getFullYear()}/${String(startDate.getMonth() + 1).padStart(2, '0')}`,
+      amount: Math.round(currentSavings),
+      contribution: currentSavings,
+    });
+
     // 目標額に達するまで、または最大30年（360ヶ月）まで計算
     while (currentSavings + investmentAmount < targetAmount && month < 360) {
       // 利息は積立部分のみに適用（貯蓄額には適用しない）
