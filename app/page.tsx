@@ -18,6 +18,7 @@ import {
   VStack,
   HStack,
   Link,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 
 // 投資先ごとの配当税率（app/page.tsx）
@@ -63,6 +64,10 @@ const DEFAULTS = {
 export default function Home() {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
+
+  // スマホ判定（app/page.tsx）
+  // iPhone SE3 などの狭い画面ではグラフの軸ラベルや余白を削って表示領域を確保する
+  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
 
   const [currentSavings, setCurrentSavings] = useState(DEFAULTS.currentSavings);
   const [monthlyAmount, setMonthlyAmount] = useState(DEFAULTS.monthlyAmount);
@@ -179,15 +184,23 @@ export default function Home() {
   return (
     <Box minH="100vh" p={{ base: 3, md: 4 }} bgGradient="linear(to-br, blue.50, purple.100)" _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}>
       <Container maxW="container.xl">
+        {/* ヘッダー（app/page.tsx）
+            スマホではタイトルが折り返さないようサイズを落とし、サブタイトルを下に縦積みする */}
         <Flex justify="space-between" align="center" mb={3}>
-          <HStack flex={1} justify="center" align="baseline" gap={3}>
-            <Heading as="h1" size="xl">
+          <Flex
+            flex={1}
+            direction={{ base: 'column', md: 'row' }}
+            justify="center"
+            align={{ base: 'flex-start', md: 'baseline' }}
+            gap={{ base: 0, md: 3 }}
+          >
+            <Heading as="h1" size={{ base: 'lg', md: 'xl' }} whiteSpace="nowrap">
               Road to FIRE
             </Heading>
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize={{ base: 'xs', md: 'sm' }} color="gray.500" whiteSpace="nowrap">
               積立投資シミュレーター
             </Text>
-          </HStack>
+          </Flex>
           <HStack gap={2}>
             <Link
               href="https://github.com/naofumi-fujii/road-to-fire"
@@ -211,7 +224,9 @@ export default function Home() {
 
         <Card.Root>
           <Card.Body p={{ base: 4, md: 5 }}>
-            <Flex direction={{ base: 'column', lg: 'row' }} gap={6} align="stretch">
+            {/* スマホでは column-reverse で結果（FIREまでの道のり）を設定より先に表示する
+                （スクロールせずに達成予測が見えるようにするためのスマホ専用レイアウト） */}
+            <Flex direction={{ base: 'column-reverse', lg: 'row' }} gap={6} align="stretch">
               {/* 左カラム: 設定パネル */}
               <Box w={{ base: '100%', lg: '560px' }} flexShrink={0}>
                 <Flex justify="space-between" align="center" mb={3}>
@@ -610,7 +625,7 @@ export default function Home() {
                 <Box
                   bg="yellow.50"
                   _dark={{ bg: "yellow.900" }}
-                  p={4}
+                  p={{ base: 3, md: 4 }}
                   borderRadius="lg"
                   mb={4}
                   textAlign="center"
@@ -620,7 +635,7 @@ export default function Home() {
                       目標達成まで あと
                     </Text>
                     <Text
-                      fontSize="4xl"
+                      fontSize={{ base: '3xl', md: '4xl' }}
                       fontWeight="bold"
                       color="orange.600"
                       _dark={{ color: "orange.300" }}
@@ -633,7 +648,7 @@ export default function Home() {
                       <>
                         <Text fontSize="lg" color="gray.500" mx={1}>＝</Text>
                         <Text
-                          fontSize="3xl"
+                          fontSize={{ base: '2xl', md: '3xl' }}
                           fontWeight="bold"
                           color="orange.600"
                           _dark={{ color: "orange.300" }}
@@ -645,7 +660,7 @@ export default function Home() {
                         {simulationData.months % 12 > 0 && (
                           <>
                             <Text
-                              fontSize="3xl"
+                              fontSize={{ base: '2xl', md: '3xl' }}
                               fontWeight="bold"
                               color="orange.600"
                               _dark={{ color: "orange.300" }}
@@ -666,17 +681,24 @@ export default function Home() {
                   </HStack>
                 </Box>
 
-                <Box h={{ base: '300px', md: '380px' }} mb={4}>
+                {/* グラフ（app/page.tsx）
+                    スマホでは軸ラベルを省略し、余白・目盛り・凡例を詰めて
+                    狭い画面（iPhone SE3 の375px幅）でもプロット領域を確保する */}
+                <Box h={{ base: '280px', md: '380px' }} mb={4} fontSize={{ base: '11px', md: 'md' }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
+                    <LineChart
+                      data={chartData}
+                      margin={isMobile ? { top: 8, right: 8, left: 0, bottom: 0 } : undefined}
+                    >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
                         dataKey="monthLabel"
-                        label={{ value: '年月', position: 'insideBottom', offset: -5 }}
+                        label={isMobile ? undefined : { value: '年月', position: 'insideBottom', offset: -5 }}
                       />
                       <YAxis
+                        width={isMobile ? 42 : 60}
                         tickFormatter={(value) => `${(value / 10000).toFixed(0)}万`}
-                        label={{ value: '月間配当額（円/月）', angle: -90, position: 'insideLeft' }}
+                        label={isMobile ? undefined : { value: '月間配当額（円/月）', angle: -90, position: 'insideLeft' }}
                       />
                       <Tooltip
                         formatter={(value) => `${Number(value ?? 0).toLocaleString()}円/月`}
@@ -694,16 +716,18 @@ export default function Home() {
                           color: isDark ? '#E2E8F0' : '#1A202C',
                         }}
                       />
-                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                      <Legend wrapperStyle={{ paddingTop: isMobile ? '8px' : '20px', fontSize: isMobile ? '11px' : undefined }} />
                       <ReferenceLine
                         y={targetMonthlyDividend}
                         stroke="#ED8936"
                         strokeDasharray="6 4"
                         label={{
-                          value: `目標 ${(targetMonthlyDividend / 10000).toLocaleString()}万円/月（税引後）`,
+                          value: isMobile
+                            ? `目標 ${(targetMonthlyDividend / 10000).toLocaleString()}万円/月`
+                            : `目標 ${(targetMonthlyDividend / 10000).toLocaleString()}万円/月（税引後）`,
                           position: 'insideTopRight',
                           fill: '#ED8936',
-                          fontSize: 12,
+                          fontSize: isMobile ? 10 : 12,
                         }}
                       />
                       <Line
@@ -712,7 +736,7 @@ export default function Home() {
                         stroke="#8884d8"
                         strokeWidth={2}
                         name="月間配当額（税引前）"
-                        dot={{ r: 4 }}
+                        dot={{ r: isMobile ? 2.5 : 4 }}
                       />
                       <Line
                         type="monotone"
@@ -720,7 +744,7 @@ export default function Home() {
                         stroke="#82ca9d"
                         strokeWidth={2}
                         name="月間配当額（税引後）"
-                        dot={{ r: 4 }}
+                        dot={{ r: isMobile ? 2.5 : 4 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
