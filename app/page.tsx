@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { FaRocket, FaBalanceScale, FaShieldAlt } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -32,11 +33,12 @@ type MarketKey = keyof typeof MARKETS;
 
 // シナリオプリセット（app/page.tsx）
 // 価格成長率と配当利回りの組み合わせを想定商品ごとにまとめたもの
-// 強気: カバードコールETF・BDC等 / 標準: SPYD・J-REIT等 / 保守: 高配当株ポートフォリオ等
+// ボタンにはアイコンと設定値を表示し、label はツールチップ（title属性）に使用する
+// 強気（ロケット）: カバードコールETF・BDC等 / 標準（天秤）: SPYD・J-REIT等 / 保守（盾）: 高配当株ポートフォリオ等
 const SCENARIOS = {
-  aggressive: { label: '強気', growthRate: 1, dividendYield: 7, description: '配当7%・成長1%' },
-  standard: { label: '標準', growthRate: 1, dividendYield: 5, description: '配当5%・成長1%' },
-  conservative: { label: '保守', growthRate: 2, dividendYield: 4, description: '配当4%・成長2%' },
+  aggressive: { label: '強気', icon: FaRocket, growthRate: 1, dividendYield: 7 },
+  standard: { label: '標準', icon: FaBalanceScale, growthRate: 1, dividendYield: 5 },
+  conservative: { label: '保守', icon: FaShieldAlt, growthRate: 2, dividendYield: 4 },
 } as const;
 
 type ScenarioKey = keyof typeof SCENARIOS;
@@ -440,6 +442,7 @@ export default function Home() {
                     <HStack gap={1}>
                       {(Object.keys(SCENARIOS) as ScenarioKey[]).map((key) => {
                         const scenario = SCENARIOS[key];
+                        const ScenarioIcon = scenario.icon;
                         const isActive =
                           growthRate === scenario.growthRate && dividendYield === scenario.dividendYield;
                         return (
@@ -452,18 +455,26 @@ export default function Home() {
                             colorScheme="blue"
                             size="sm"
                             flex={1}
+                            h="auto"
+                            py={1.5}
+                            title={scenario.label}
+                            aria-label={scenario.label}
                             variant={isActive ? 'solid' : 'outline'}
                             _dark={isActive
                               ? { bg: "blue.600", color: "white", _hover: { bg: "blue.500" } }
                               : { borderColor: "gray.600", color: "gray.300", _hover: { bg: "gray.700" } }}
                           >
-                            {scenario.label}
+                            <VStack gap={0.5}>
+                              <ScenarioIcon size={14} />
+                              <Text fontSize="xs" lineHeight="1.2">配当{scenario.dividendYield}%</Text>
+                              <Text fontSize="xs" lineHeight="1.2">成長{scenario.growthRate}%</Text>
+                            </VStack>
                           </Button>
                         );
                       })}
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      強気: 配当7%・成長1% / 標準: 配当5%・成長1% / 保守: 配当4%・成長2%。選択後も個別に調整できます
+                      選択後も個別に調整できます
                     </Text>
                   </VStack>
 
