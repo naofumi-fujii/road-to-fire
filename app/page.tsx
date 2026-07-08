@@ -52,8 +52,8 @@ const CURRENT_MONTH = TODAY.getMonth() + 1; // 1-indexed
 const DEFAULTS = {
   currentSavings: 14000000, // 現在の貯蓄額（1400万円）
   monthlyAmount: 300000, // 毎月の積立額（30万円）
-  growthRate: 2, // 価格成長率（%）配当利回り4%との組み合わせで実効年利が約5%になる想定
-  dividendYield: 4, // 配当利回り（%）高配当株ポートフォリオを想定したデフォルト値
+  growthRate: 1, // 価格成長率（%）強気シナリオ（カバードコールETF・BDC等）と同じ値
+  dividendYield: 7, // 配当利回り（%）強気シナリオを想定したデフォルト値
   targetMonthlyDividend: 200000, // 目標の毎月配当額（20万円）
   startYear: CURRENT_YEAR, // 計算開始年
   startMonth: CURRENT_MONTH, // 計算開始月（1-12）
