@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { FaRocket, FaBalanceScale, FaShieldAlt } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -30,6 +31,18 @@ const MARKETS = {
 
 type MarketKey = keyof typeof MARKETS;
 
+// シナリオプリセット（app/page.tsx）
+// 価格成長率と配当利回りの組み合わせを想定商品ごとにまとめたもの
+// ボタンにはアイコンと設定値を表示し、label はツールチップ（title属性）に使用する
+// 強気（ロケット）: カバードコールETF・BDC等 / 標準（天秤）: SPYD・J-REIT等 / 保守（盾）: 高配当株ポートフォリオ等
+const SCENARIOS = {
+  aggressive: { label: '強気', icon: FaRocket, growthRate: 1, dividendYield: 7 },
+  standard: { label: '標準', icon: FaBalanceScale, growthRate: 1, dividendYield: 5 },
+  conservative: { label: '保守', icon: FaShieldAlt, growthRate: 2, dividendYield: 4 },
+} as const;
+
+type ScenarioKey = keyof typeof SCENARIOS;
+
 // 現在の年月（計算開始のデフォルト）
 const TODAY = new Date();
 const CURRENT_YEAR = TODAY.getFullYear();
@@ -39,8 +52,8 @@ const CURRENT_MONTH = TODAY.getMonth() + 1; // 1-indexed
 const DEFAULTS = {
   currentSavings: 14000000, // 現在の貯蓄額（1400万円）
   monthlyAmount: 300000, // 毎月の積立額（30万円）
-  annualReturn: 5, // 年利（%）
-  dividendYield: 4, // 配当利回り（%）4%ルールに合わせたデフォルト値
+  growthRate: 2, // 価格成長率（%）配当利回り4%との組み合わせで実効年利が約5%になる想定
+  dividendYield: 4, // 配当利回り（%）高配当株ポートフォリオを想定したデフォルト値
   targetMonthlyDividend: 200000, // 目標の毎月配当額（20万円）
   startYear: CURRENT_YEAR, // 計算開始年
   startMonth: CURRENT_MONTH, // 計算開始月（1-12）
@@ -53,7 +66,7 @@ export default function Home() {
 
   const [currentSavings, setCurrentSavings] = useState(DEFAULTS.currentSavings);
   const [monthlyAmount, setMonthlyAmount] = useState(DEFAULTS.monthlyAmount);
-  const [annualReturn, setAnnualReturn] = useState(DEFAULTS.annualReturn);
+  const [growthRate, setGrowthRate] = useState(DEFAULTS.growthRate);
   const [dividendYield, setDividendYield] = useState(DEFAULTS.dividendYield);
   const [targetMonthlyDividend, setTargetMonthlyDividend] = useState(DEFAULTS.targetMonthlyDividend);
   const [startYear, setStartYear] = useState(DEFAULTS.startYear);
@@ -64,7 +77,7 @@ export default function Home() {
   const handleReset = () => {
     setCurrentSavings(DEFAULTS.currentSavings);
     setMonthlyAmount(DEFAULTS.monthlyAmount);
-    setAnnualReturn(DEFAULTS.annualReturn);
+    setGrowthRate(DEFAULTS.growthRate);
     setDividendYield(DEFAULTS.dividendYield);
     setTargetMonthlyDividend(DEFAULTS.targetMonthlyDividend);
     setStartYear(DEFAULTS.startYear);
@@ -81,16 +94,33 @@ export default function Home() {
     return dividendYield > 0 ? annualDividendBeforeTax / (dividendYield / 100) : 0;
   }, [targetMonthlyDividend, dividendYield, market]);
 
+  // 実効年利の計算（app/page.tsx effectiveAnnualReturn）
+  // 価格成長率に、税引後の配当を再投資した分を加えたトータルリターン（%）
+  // 実効年利 = 価格成長率 + 配当利回り × (1 − 配当税率)
+  const effectiveAnnualReturn = useMemo(() => {
+    const taxRate = MARKETS[market].taxRate;
+    return growthRate + dividendYield * (1 - taxRate);
+  }, [growthRate, dividendYield, market]);
+
   // 積立シミュレーションの計算（目標額は必要資産額を使用）
   const targetAmount = Math.round(requiredAmount);
   const simulationData = useMemo(() => {
     const data = [];
-    let investmentAmount = 0; // 積立額と運用益（年利が適用される部分）
-    const monthlyReturn = annualReturn / 100 / 12; // 月利
+    let investmentAmount = 0; // 積立額と運用益（実効年利が適用される部分）
+    const monthlyReturn = effectiveAnnualReturn / 100 / 12; // 月利
     let month = 0;
 
     // 計算開始日（startYear年startMonth月）
     const startDate = new Date(startYear, startMonth - 1);
+
+    // 0ヶ月目（現在時点）のデータポイント
+    // グラフを積立開始前の現在の状態（貯蓄額のみ）から始めるために追加する
+    data.push({
+      month: 0,
+      monthLabel: `${startDate.getFullYear()}/${String(startDate.getMonth() + 1).padStart(2, '0')}`,
+      amount: Math.round(currentSavings),
+      contribution: currentSavings,
+    });
 
     // 目標額に達するまで、または最大30年（360ヶ月）まで計算
     while (currentSavings + investmentAmount < targetAmount && month < 360) {
@@ -117,7 +147,7 @@ export default function Home() {
     const targetDate = new Date(startDate.getFullYear(), startDate.getMonth() + month);
 
     return { data, months: month, finalAmount: currentSavings + investmentAmount, targetDate };
-  }, [targetAmount, currentSavings, monthlyAmount, annualReturn, startYear, startMonth]);
+  }, [targetAmount, currentSavings, monthlyAmount, effectiveAnnualReturn, startYear, startMonth]);
 
   // グラフ表示用データ（app/page.tsx chartData）
   // 半年（6ヶ月）ごとへ間引き（最終点＝目標達成月は必ず含める）、
@@ -147,25 +177,43 @@ export default function Home() {
   }, [monthlyAmount]);
 
   return (
-    <Box minH="100vh" p={{ base: 4, md: 6 }} bgGradient="linear(to-br, blue.50, purple.100)" _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}>
+    <Box minH="100vh" p={{ base: 3, md: 4 }} bgGradient="linear(to-br, blue.50, purple.100)" _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}>
       <Container maxW="container.xl">
-        <Flex justify="space-between" align="center" mb={4}>
-          <Box flex={1}>
-            <Heading as="h1" size="xl" textAlign="center">
+        <Flex justify="space-between" align="center" mb={3}>
+          <HStack flex={1} justify="center" align="baseline" gap={3}>
+            <Heading as="h1" size="xl">
               Road to FIRE
             </Heading>
-            <Text textAlign="center" fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color="gray.500">
               積立投資シミュレーター
             </Text>
-          </Box>
-          <ThemeToggle />
+          </HStack>
+          <HStack gap={2}>
+            <Link
+              href="https://github.com/naofumi-fujii/road-to-fire"
+              target="_blank"
+              rel="noopener noreferrer"
+              _hover={{ opacity: 0.7 }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+            </Link>
+            <ThemeToggle />
+          </HStack>
         </Flex>
 
-        <Card.Root mb={8}>
-          <Card.Body p={{ base: 4, md: 6 }}>
+        <Card.Root>
+          <Card.Body p={{ base: 4, md: 5 }}>
             <Flex direction={{ base: 'column', lg: 'row' }} gap={6} align="stretch">
               {/* 左カラム: 設定パネル */}
-              <Box w={{ base: '100%', lg: '340px' }} flexShrink={0}>
+              <Box w={{ base: '100%', lg: '560px' }} flexShrink={0}>
                 <Flex justify="space-between" align="center" mb={3}>
                   <Heading as="h2" size="md">設定</Heading>
                   <Button
@@ -179,7 +227,9 @@ export default function Home() {
                   </Button>
                 </Flex>
 
-                <VStack align="stretch" gap={4}>
+                {/* 設定項目を2列グリッドで配置（app/page.tsx 設定パネル）
+                    ファーストビューに収めるため、縦1列ではなく2列で高さを圧縮している */}
+                <SimpleGrid columns={{ base: 1, sm: 2 }} gap={3}>
                   <VStack align="stretch" gap={1}>
                     <Text fontSize="sm" fontWeight="medium">
                       計算開始年月
@@ -390,29 +440,72 @@ export default function Home() {
                       </Button>
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      税引後（手取り）でこの配当額を得るのに必要な資産額（配当税率・配当利回りから逆算）が目標額になります
+                      税引後でこの配当額を得るのに必要な資産額が目標額になります
+                    </Text>
+                  </VStack>
+
+                  <VStack align="stretch" gap={1}>
+                    <Text fontSize="sm" fontWeight="medium">
+                      シナリオ
+                    </Text>
+                    <HStack gap={1}>
+                      {(Object.keys(SCENARIOS) as ScenarioKey[]).map((key) => {
+                        const scenario = SCENARIOS[key];
+                        const ScenarioIcon = scenario.icon;
+                        const isActive =
+                          growthRate === scenario.growthRate && dividendYield === scenario.dividendYield;
+                        return (
+                          <Button
+                            key={key}
+                            onClick={() => {
+                              setGrowthRate(scenario.growthRate);
+                              setDividendYield(scenario.dividendYield);
+                            }}
+                            colorScheme="blue"
+                            size="sm"
+                            flex={1}
+                            h="auto"
+                            py={1.5}
+                            title={scenario.label}
+                            aria-label={scenario.label}
+                            variant={isActive ? 'solid' : 'outline'}
+                            _dark={isActive
+                              ? { bg: "blue.600", color: "white", _hover: { bg: "blue.500" } }
+                              : { borderColor: "gray.600", color: "gray.300", _hover: { bg: "gray.700" } }}
+                          >
+                            <VStack gap={0.5}>
+                              <ScenarioIcon size={14} />
+                              <Text fontSize="xs" lineHeight="1.2">配当{scenario.dividendYield}%</Text>
+                              <Text fontSize="xs" lineHeight="1.2">成長{scenario.growthRate}%</Text>
+                            </VStack>
+                          </Button>
+                        );
+                      })}
+                    </HStack>
+                    <Text fontSize="xs" color="gray.500">
+                      選択後も個別に調整できます
                     </Text>
                   </VStack>
 
                   <SimpleGrid columns={2} gap={3}>
                     <VStack align="stretch" gap={1}>
                       <Text fontSize="sm" fontWeight="medium">
-                        想定年利（%）
+                        価格成長率（%）
                       </Text>
                       <Input
                         type="number"
                         inputMode="decimal"
                         autoComplete="off"
                         size="sm"
-                        value={annualReturn}
-                        onChange={(e) => setAnnualReturn(Number(e.target.value))}
+                        value={growthRate}
+                        onChange={(e) => setGrowthRate(Number(e.target.value))}
                         step={0.5}
                         min={0}
                         max={20}
                       />
                       <HStack gap={1}>
                         <Button
-                          onClick={() => setAnnualReturn(prev => Math.max(0, prev - 1))}
+                          onClick={() => setGrowthRate(prev => Math.max(0, prev - 1))}
                           colorScheme="blue"
                           size="xs"
                           flex={1}
@@ -421,7 +514,7 @@ export default function Home() {
                           -1
                         </Button>
                         <Button
-                          onClick={() => setAnnualReturn(prev => Math.min(20, prev + 1))}
+                          onClick={() => setGrowthRate(prev => Math.min(20, prev + 1))}
                           colorScheme="blue"
                           size="xs"
                           flex={1}
@@ -470,6 +563,18 @@ export default function Home() {
                     </VStack>
                   </SimpleGrid>
 
+                  <Box bg="blue.50" _dark={{ bg: "blue.900" }} px={3} py={2} borderRadius="lg">
+                    <HStack justify="space-between" align="baseline">
+                      <Text fontSize="xs">実効年利（配当再投資前提）</Text>
+                      <Text fontSize="lg" fontWeight="bold" color="blue.600" _dark={{ color: "blue.300" }}>
+                        {effectiveAnnualReturn.toFixed(2)}%
+                      </Text>
+                    </HStack>
+                    <Text fontSize="xs" color="gray.500">
+                      価格成長率 + 配当利回り × (1 − 配当税率)
+                    </Text>
+                  </Box>
+
                   <VStack align="stretch" gap={1}>
                     <Text fontSize="sm" fontWeight="medium">
                       投資先（配当税率）
@@ -492,10 +597,10 @@ export default function Home() {
                       ))}
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      国内: 20.315% / 海外（US）: 28.2835%（米国源泉10% + 国内課税20.315%。外国税額控除・NISAは考慮しません）
+                      国内: 20.315% / US: 28.2835%（外国税額控除・NISA考慮なし）
                     </Text>
                   </VStack>
-                </VStack>
+                </SimpleGrid>
               </Box>
 
               {/* 右カラム: FIREまでの道のり（達成予測＋月間配当グラフ＋サマリー） */}
@@ -661,24 +766,6 @@ export default function Home() {
           </Card.Body>
         </Card.Root>
 
-        <Flex justify="center" mt={8}>
-          <Link
-            href="https://github.com/naofumi-fujii/road-to-fire"
-            target="_blank"
-            rel="noopener noreferrer"
-            _hover={{ opacity: 0.7 }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-          </Link>
-        </Flex>
       </Container>
     </Box>
   );
