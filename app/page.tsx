@@ -55,7 +55,7 @@ const DEFAULTS = {
   monthlyAmount: 300000, // 毎月の積立額（30万円）
   growthRate: 1, // 価格成長率（%）強気シナリオ（カバードコールETF・BDC等）と同じ値
   dividendYield: 7, // 配当利回り（%）強気シナリオを想定したデフォルト値
-  targetMonthlyDividend: 200000, // 目標の毎月配当額（20万円）
+  targetMonthlyDividend: 100000, // 目標の毎月配当額（10万円）
   startYear: CURRENT_YEAR, // 計算開始年
   startMonth: CURRENT_MONTH, // 計算開始月（1-12）
   market: 'us' as MarketKey, // 投資先（配当税率の切り替えに使用）
