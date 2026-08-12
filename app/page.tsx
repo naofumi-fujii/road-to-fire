@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { FaRocket, FaBalanceScale, FaShieldAlt } from 'react-icons/fa';
+import { FaRocket, FaBalanceScale, FaShieldAlt, FaGlobe } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -24,22 +24,41 @@ import {
 // 投資先ごとの配当税率（app/page.tsx）
 // 国内: 所得税15.315% + 住民税5% = 20.315%
 // 海外（US）: 米国で10%源泉徴収された後、残りに国内20.315%が課税される
-//   実効税率 = 1 - 0.9 × (1 - 0.20315) = 0.282835（外国税額控除・NISAは考慮しない）
+//   実効税率 = 1 - 0.9 × (1 - 0.20315) = 0.282835（外国税額控除は考慮しない）
+// NISA: 配当・譲渡益ともに非課税なので税率0%
+//   （オルカン等の投資信託を全額NISA枠で保有するパターンで使用する）
 const MARKETS = {
   domestic: { label: '国内', taxRate: 0.20315, taxRateLabel: '20.315%' },
   us: { label: '海外（US）', taxRate: 0.282835, taxRateLabel: '28.2835%' },
+  nisa: { label: 'NISA', taxRate: 0, taxRateLabel: '0%' },
 } as const;
 
 type MarketKey = keyof typeof MARKETS;
+
+// NISAの投資枠（app/page.tsx）
+// 生涯投資枠1800万円、年間投資枠360万円（つみたて投資枠120万＋成長投資枠240万）
+// シミュレーションは全額非課税として計算するため、枠を超える場合は注意書きで知らせる
+const NISA_LIFETIME_LIMIT = 18000000;
+const NISA_ANNUAL_LIMIT = 3600000;
 
 // シナリオプリセット（app/page.tsx）
 // 価格成長率と配当利回りの組み合わせを想定商品ごとにまとめたもの
 // ボタンにはアイコンと設定値を表示し、label はツールチップ（title属性）に使用する
 // 強気（ロケット）: カバードコールETF・BDC等 / 標準（天秤）: SPYD・J-REIT等 / 保守（盾）: 高配当株ポートフォリオ等
+// オルカン（地球）: 全世界株式インデックスをNISA枠で保有するパターン。market を指定するシナリオは
+//   選択時に投資先も切り替える。オルカンは分配金を出さないため、利回り4%は
+//   「4%ルールで取り崩す額」とみなし、価格成長3%と合わせてトータルリターン7%を想定する
 const SCENARIOS = {
-  aggressive: { label: '強気', icon: FaRocket, growthRate: 1, dividendYield: 7 },
-  standard: { label: '標準', icon: FaBalanceScale, growthRate: 1, dividendYield: 5 },
-  conservative: { label: '保守', icon: FaShieldAlt, growthRate: 2, dividendYield: 4 },
+  aggressive: { label: '強気（カバードコールETF・BDC等）', icon: FaRocket, growthRate: 1, dividendYield: 7 },
+  standard: { label: '標準（SPYD・J-REIT等）', icon: FaBalanceScale, growthRate: 1, dividendYield: 5 },
+  conservative: { label: '保守（高配当株ポートフォリオ等）', icon: FaShieldAlt, growthRate: 2, dividendYield: 4 },
+  allCountry: {
+    label: 'オルカン（全世界株式・全額NISA非課税・4%ルール取り崩し）',
+    icon: FaGlobe,
+    growthRate: 3,
+    dividendYield: 4,
+    market: 'nisa' as MarketKey,
+  },
 } as const;
 
 type ScenarioKey = keyof typeof SCENARIOS;
@@ -180,6 +199,29 @@ export default function Home() {
   const estimatedAnnualIncome = useMemo(() => {
     return monthlyAmount * 12;
   }, [monthlyAmount]);
+
+  // 非課税（NISA）かどうか。グラフの税引前／税引後の2本線を1本にまとめる判定にも使う
+  const isTaxFree = MARKETS[market].taxRate === 0;
+
+  // NISA投資枠のチェック（app/page.tsx nisaWarnings）
+  // 全額NISA枠で運用する前提で計算しているため、生涯投資枠1800万円・年間投資枠360万円を
+  // 超える入力になっている場合は、超過分が実際には課税口座になることを注意書きで知らせる
+  const nisaWarnings = useMemo(() => {
+    if (!isTaxFree) return [];
+    const warnings: string[] = [];
+    const totalInvested = currentSavings + monthlyAmount * simulationData.months;
+    if (totalInvested > NISA_LIFETIME_LIMIT) {
+      warnings.push(
+        `投資元本 ${totalInvested.toLocaleString()}円 が生涯投資枠1800万円を超えています（超過 ${(totalInvested - NISA_LIFETIME_LIMIT).toLocaleString()}円）`
+      );
+    }
+    if (estimatedAnnualIncome > NISA_ANNUAL_LIMIT) {
+      warnings.push(
+        `年間積立額 ${estimatedAnnualIncome.toLocaleString()}円 が年間投資枠360万円（毎月30万円）を超えています`
+      );
+    }
+    return warnings;
+  }, [isTaxFree, currentSavings, monthlyAmount, simulationData.months, estimatedAnnualIncome]);
 
   return (
     <Box minH="100vh" p={{ base: 3, md: 4 }} bgGradient="linear(to-br, blue.50, purple.100)" _dark={{ bgGradient: "linear(to-br, gray.900, gray.800)" }}>
@@ -463,22 +505,31 @@ export default function Home() {
                     <Text fontSize="sm" fontWeight="medium">
                       シナリオ
                     </Text>
-                    <HStack gap={1}>
+                    {/* シナリオは4種類あるため2列グリッドで折り返す
+                        （設定パネルは2列レイアウトで幅が狭く、4つ横並びだとラベルが潰れるため） */}
+                    <SimpleGrid columns={2} gap={1}>
                       {(Object.keys(SCENARIOS) as ScenarioKey[]).map((key) => {
                         const scenario = SCENARIOS[key];
                         const ScenarioIcon = scenario.icon;
+                        // market を持つシナリオ（オルカン）は投資先の一致もアクティブ判定に含める
+                        const scenarioMarket = 'market' in scenario ? scenario.market : undefined;
                         const isActive =
-                          growthRate === scenario.growthRate && dividendYield === scenario.dividendYield;
+                          growthRate === scenario.growthRate &&
+                          dividendYield === scenario.dividendYield &&
+                          (scenarioMarket === undefined || market === scenarioMarket);
                         return (
                           <Button
                             key={key}
                             onClick={() => {
                               setGrowthRate(scenario.growthRate);
                               setDividendYield(scenario.dividendYield);
+                              if (scenarioMarket) {
+                                setMarket(scenarioMarket);
+                              }
                             }}
                             colorScheme="blue"
                             size="sm"
-                            flex={1}
+                            w="100%"
                             h="auto"
                             py={1.5}
                             title={scenario.label}
@@ -496,10 +547,15 @@ export default function Home() {
                           </Button>
                         );
                       })}
-                    </HStack>
+                    </SimpleGrid>
                     <Text fontSize="xs" color="gray.500">
                       選択後も個別に調整できます
                     </Text>
+                    {isTaxFree && (
+                      <Text fontSize="xs" color="gray.500">
+                        オルカン（地球アイコン）は全額NISA・分配金なしの想定です。利回り4%は4%ルールでの取り崩し額とみなしています
+                      </Text>
+                    )}
                   </VStack>
 
                   <SimpleGrid columns={2} gap={3}>
@@ -612,7 +668,7 @@ export default function Home() {
                       ))}
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      国内: 20.315% / US: 28.2835%（外国税額控除・NISA考慮なし）
+                      国内: 20.315% / US: 28.2835% / NISA: 0%（外国税額控除は考慮なし）
                     </Text>
                   </VStack>
                 </SimpleGrid>
@@ -681,6 +737,34 @@ export default function Home() {
                   </HStack>
                 </Box>
 
+                {/* NISA投資枠の注意書き（app/page.tsx）
+                    投資先がNISAのときだけ表示する。シミュレーション自体は全額非課税で計算しているため、
+                    枠を超えた分が実際には課税口座になることをここで補足する */}
+                {nisaWarnings.length > 0 && (
+                  <Box
+                    bg="red.50"
+                    _dark={{ bg: "red.900" }}
+                    px={3}
+                    py={2}
+                    borderRadius="lg"
+                    mb={4}
+                  >
+                    <Text fontSize="xs" fontWeight="bold" color="red.700" _dark={{ color: "red.200" }} mb={1}>
+                      NISAの投資枠を超えています
+                    </Text>
+                    <VStack align="stretch" gap={0.5}>
+                      {nisaWarnings.map((warning) => (
+                        <Text key={warning} fontSize="xs" color="red.700" _dark={{ color: "red.200" }}>
+                          ・{warning}
+                        </Text>
+                      ))}
+                    </VStack>
+                    <Text fontSize="xs" color="gray.500" mt={1}>
+                      本シミュレーションは全額非課税として計算しています。超過分は課税口座（国内20.315% / US 28.2835%）となる点にご注意ください
+                    </Text>
+                  </Box>
+                )}
+
                 {/* グラフ（app/page.tsx）
                     スマホでは軸ラベルを省略し、余白・目盛り・凡例を詰めて
                     狭い画面（iPhone SE3 の375px幅）でもプロット領域を確保する */}
@@ -722,7 +806,7 @@ export default function Home() {
                         stroke="#ED8936"
                         strokeDasharray="6 4"
                         label={{
-                          value: isMobile
+                          value: isMobile || isTaxFree
                             ? `目標 ${(targetMonthlyDividend / 10000).toLocaleString()}万円/月`
                             : `目標 ${(targetMonthlyDividend / 10000).toLocaleString()}万円/月（税引後）`,
                           position: 'insideTopRight',
@@ -730,22 +814,25 @@ export default function Home() {
                           fontSize: isMobile ? 10 : 12,
                         }}
                       />
+                      {/* NISA（非課税）では税引前と税引後が一致するため、線を1本にまとめる */}
                       <Line
                         type="monotone"
                         dataKey="monthlyDividend"
-                        stroke="#8884d8"
+                        stroke={isTaxFree ? '#82ca9d' : '#8884d8'}
                         strokeWidth={2}
-                        name="月間配当額（税引前）"
+                        name={isTaxFree ? '月間配当額（非課税）' : '月間配当額（税引前）'}
                         dot={{ r: isMobile ? 2.5 : 4 }}
                       />
-                      <Line
-                        type="monotone"
-                        dataKey="monthlyDividendAfterTax"
-                        stroke="#82ca9d"
-                        strokeWidth={2}
-                        name="月間配当額（税引後）"
-                        dot={{ r: isMobile ? 2.5 : 4 }}
-                      />
+                      {!isTaxFree && (
+                        <Line
+                          type="monotone"
+                          dataKey="monthlyDividendAfterTax"
+                          stroke="#82ca9d"
+                          strokeWidth={2}
+                          name="月間配当額（税引後）"
+                          dot={{ r: isMobile ? 2.5 : 4 }}
+                        />
+                      )}
                     </LineChart>
                   </ResponsiveContainer>
                 </Box>
