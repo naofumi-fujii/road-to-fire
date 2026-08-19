@@ -18,6 +18,9 @@ import {
   VStack,
   HStack,
   Link,
+  Portal,
+  // recharts の Tooltip と名前が衝突するため ChakraTooltip として読み込む（app/page.tsx）
+  Tooltip as ChakraTooltip,
   useBreakpointValue,
 } from '@chakra-ui/react';
 
@@ -44,16 +47,48 @@ type IncomeMode = 'dividend' | 'withdrawal';
 
 // シナリオプリセット（app/page.tsx）
 // 価格成長率・配当利回り・受け取り方の組み合わせを想定商品ごとにまとめたもの
-// ボタンにはアイコンと設定値を表示し、label はツールチップ（title属性）に使用する
-// 強気（ロケット）: カバードコールETF・BDC等 / 標準（天秤）: SPYD・J-REIT等 / 保守（盾）: 高配当株ポートフォリオ等
-// インデックス（地球）: オルカン・全世界株インデックス等。無分配で配当が出ない代わりに
-//   価格成長が大きいため、配当ではなく取り崩し（4%ルール）で生活費をまかなう想定にする
+// ボタンにはアイコンと設定値を表示し、label と products はホバー時のツールチップに表示する
+// products は各シナリオの利回り・成長率の根拠となる代表的な商品（利回りは変動するため目安）
+// インデックスは無分配で配当が出ない代わりに価格成長が大きいため、
+// 配当ではなく取り崩し（4%ルール）で生活費をまかなう想定にする
 const SCENARIOS = {
-  aggressive: { label: '強気', icon: FaRocket, growthRate: 1, dividendYield: 7, incomeMode: 'dividend', withdrawalRate: 4 },
-  standard: { label: '標準', icon: FaBalanceScale, growthRate: 1, dividendYield: 5, incomeMode: 'dividend', withdrawalRate: 4 },
-  conservative: { label: '保守', icon: FaShieldAlt, growthRate: 2, dividendYield: 4, incomeMode: 'dividend', withdrawalRate: 4 },
-  index: { label: 'インデックス', icon: FaGlobe, growthRate: 6, dividendYield: 0, incomeMode: 'withdrawal', withdrawalRate: 4 },
-} as const satisfies Record<string, { label: string; icon: typeof FaRocket; growthRate: number; dividendYield: number; incomeMode: IncomeMode; withdrawalRate: number }>;
+  aggressive: {
+    label: '強気',
+    icon: FaRocket,
+    growthRate: 1,
+    dividendYield: 7,
+    incomeMode: 'dividend',
+    withdrawalRate: 4,
+    products: 'JEPI・JEPQ・QYLD などのカバードコールETF、ARCC などのBDC、東証のカバコETF（2865等）',
+  },
+  standard: {
+    label: '標準',
+    icon: FaBalanceScale,
+    growthRate: 1,
+    dividendYield: 5,
+    incomeMode: 'dividend',
+    withdrawalRate: 4,
+    products: 'SPYD・PFF などの高配当/優先株ETF、1343（東証REIT指数）・1489（日経高配当50）',
+  },
+  conservative: {
+    label: '保守',
+    icon: FaShieldAlt,
+    growthRate: 2,
+    dividendYield: 4,
+    incomeMode: 'dividend',
+    withdrawalRate: 4,
+    products: 'SCHD・HDV・VYM などの増配系ETF、商社・メガバンク・通信などの高配当株',
+  },
+  index: {
+    label: 'インデックス',
+    icon: FaGlobe,
+    growthRate: 6,
+    dividendYield: 0,
+    incomeMode: 'withdrawal',
+    withdrawalRate: 4,
+    products: 'eMAXIS Slim 全世界株式（オルカン）、楽天・オールカントリー、SBI・V・全世界株式、eMAXIS Slim 米国株式（S&P500）',
+  },
+} as const satisfies Record<string, { label: string; icon: typeof FaRocket; growthRate: number; dividendYield: number; incomeMode: IncomeMode; withdrawalRate: number; products: string }>;
 
 type ScenarioKey = keyof typeof SCENARIOS;
 
@@ -498,36 +533,52 @@ export default function Home() {
                             ? withdrawalRate === scenario.withdrawalRate
                             : dividendYield === scenario.dividendYield);
                         return (
-                          <Button
-                            key={key}
-                            onClick={() => {
-                              setGrowthRate(scenario.growthRate);
-                              setDividendYield(scenario.dividendYield);
-                              setIncomeMode(scenario.incomeMode);
-                              setWithdrawalRate(scenario.withdrawalRate);
-                            }}
-                            colorScheme="blue"
-                            size="sm"
-                            flex={1}
-                            h="auto"
-                            py={1.5}
-                            title={scenario.label}
-                            aria-label={scenario.label}
-                            variant={isActive ? 'solid' : 'outline'}
-                            _dark={isActive
-                              ? { bg: "blue.600", color: "white", _hover: { bg: "blue.500" } }
-                              : { borderColor: "gray.600", color: "gray.300", _hover: { bg: "gray.700" } }}
-                          >
-                            <VStack gap={0.5}>
-                              <ScenarioIcon size={14} />
-                              <Text fontSize="xs" lineHeight="1.2">
-                                {scenario.incomeMode === 'withdrawal'
-                                  ? `取崩${scenario.withdrawalRate}%`
-                                  : `利回り${scenario.dividendYield}%`}
-                              </Text>
-                              <Text fontSize="xs" lineHeight="1.2">成長{scenario.growthRate}%</Text>
-                            </VStack>
-                          </Button>
+                          // シナリオボタン（app/page.tsx 設定パネル）
+                          // ホバー時にシナリオ名と代表的な商品（SCENARIOS.products）をツールチップ表示する
+                          <ChakraTooltip.Root key={key} openDelay={200} closeDelay={100} positioning={{ placement: 'top' }}>
+                            <ChakraTooltip.Trigger asChild>
+                              <Button
+                                onClick={() => {
+                                  setGrowthRate(scenario.growthRate);
+                                  setDividendYield(scenario.dividendYield);
+                                  setIncomeMode(scenario.incomeMode);
+                                  setWithdrawalRate(scenario.withdrawalRate);
+                                }}
+                                colorScheme="blue"
+                                size="sm"
+                                flex={1}
+                                h="auto"
+                                py={1.5}
+                                aria-label={scenario.label}
+                                variant={isActive ? 'solid' : 'outline'}
+                                _dark={isActive
+                                  ? { bg: "blue.600", color: "white", _hover: { bg: "blue.500" } }
+                                  : { borderColor: "gray.600", color: "gray.300", _hover: { bg: "gray.700" } }}
+                              >
+                                <VStack gap={0.5}>
+                                  <ScenarioIcon size={14} />
+                                  <Text fontSize="xs" lineHeight="1.2">
+                                    {scenario.incomeMode === 'withdrawal'
+                                      ? `取崩${scenario.withdrawalRate}%`
+                                      : `利回り${scenario.dividendYield}%`}
+                                  </Text>
+                                  <Text fontSize="xs" lineHeight="1.2">成長{scenario.growthRate}%</Text>
+                                </VStack>
+                              </Button>
+                            </ChakraTooltip.Trigger>
+                            <Portal>
+                              <ChakraTooltip.Positioner>
+                                <ChakraTooltip.Content maxW="260px">
+                                  <ChakraTooltip.Arrow>
+                                    <ChakraTooltip.ArrowTip />
+                                  </ChakraTooltip.Arrow>
+                                  <Text fontSize="xs" fontWeight="bold" mb={0.5}>{scenario.label}</Text>
+                                  <Text fontSize="xs">{scenario.products}</Text>
+                                  <Text fontSize="xs" opacity={0.7} mt={1}>※利回りは変動するため目安です</Text>
+                                </ChakraTooltip.Content>
+                              </ChakraTooltip.Positioner>
+                            </Portal>
+                          </ChakraTooltip.Root>
                         );
                       })}
                     </HStack>
