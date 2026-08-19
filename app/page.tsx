@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { FaRocket, FaBalanceScale, FaShieldAlt } from 'react-icons/fa';
+import { FaRocket, FaBalanceScale, FaShieldAlt, FaGlobe } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -18,6 +18,9 @@ import {
   VStack,
   HStack,
   Link,
+  Portal,
+  // recharts の Tooltip と名前が衝突するため ChakraTooltip として読み込む（app/page.tsx）
+  Tooltip as ChakraTooltip,
   useBreakpointValue,
 } from '@chakra-ui/react';
 
@@ -32,15 +35,60 @@ const MARKETS = {
 
 type MarketKey = keyof typeof MARKETS;
 
+// 譲渡益（取り崩し）に対する国内課税率（app/page.tsx）
+// 所得税15.315% + 住民税5% = 20.315%。米国ETFでも売却益に米国源泉徴収はかからないため
+// 投資先（MARKETS）に関係なくこの税率を使う
+const CAPITAL_GAINS_TAX_RATE = 0.20315;
+
+// 生活費の受け取り方（app/page.tsx）
+// dividend: 配当でまかなう（配当利回り × 資産額）
+// withdrawal: 資産を取り崩してまかなう（取り崩し率 × 資産額、いわゆる4%ルール）
+type IncomeMode = 'dividend' | 'withdrawal';
+
 // シナリオプリセット（app/page.tsx）
-// 価格成長率と配当利回りの組み合わせを想定商品ごとにまとめたもの
-// ボタンにはアイコンと設定値を表示し、label はツールチップ（title属性）に使用する
-// 強気（ロケット）: カバードコールETF・BDC等 / 標準（天秤）: SPYD・J-REIT等 / 保守（盾）: 高配当株ポートフォリオ等
+// 価格成長率・配当利回り・受け取り方の組み合わせを想定商品ごとにまとめたもの
+// ボタンにはアイコンと設定値を表示し、label と products はホバー時のツールチップに表示する
+// products は各シナリオの利回り・成長率の根拠となる代表的な商品（利回りは変動するため目安）
+// インデックスは無分配で配当が出ない代わりに価格成長が大きいため、
+// 配当ではなく取り崩し（4%ルール）で生活費をまかなう想定にする
 const SCENARIOS = {
-  aggressive: { label: '強気', icon: FaRocket, growthRate: 1, dividendYield: 7 },
-  standard: { label: '標準', icon: FaBalanceScale, growthRate: 1, dividendYield: 5 },
-  conservative: { label: '保守', icon: FaShieldAlt, growthRate: 2, dividendYield: 4 },
-} as const;
+  aggressive: {
+    label: '強気',
+    icon: FaRocket,
+    growthRate: 1,
+    dividendYield: 7,
+    incomeMode: 'dividend',
+    withdrawalRate: 4,
+    products: 'JEPI・JEPQ・QYLD などのカバードコールETF、ARCC などのBDC、東証のカバコETF（2865等）',
+  },
+  standard: {
+    label: '標準',
+    icon: FaBalanceScale,
+    growthRate: 1,
+    dividendYield: 5,
+    incomeMode: 'dividend',
+    withdrawalRate: 4,
+    products: 'SPYD・PFF などの高配当/優先株ETF、1343（東証REIT指数）・1489（日経高配当50）',
+  },
+  conservative: {
+    label: '保守',
+    icon: FaShieldAlt,
+    growthRate: 2,
+    dividendYield: 4,
+    incomeMode: 'dividend',
+    withdrawalRate: 4,
+    products: 'SCHD・HDV・VYM などの増配系ETF、商社・メガバンク・通信などの高配当株',
+  },
+  index: {
+    label: 'インデックス',
+    icon: FaGlobe,
+    growthRate: 6,
+    dividendYield: 0,
+    incomeMode: 'withdrawal',
+    withdrawalRate: 4,
+    products: 'eMAXIS Slim 全世界株式（オルカン）、楽天・オールカントリー、SBI・V・全世界株式、eMAXIS Slim 米国株式（S&P500）',
+  },
+} as const satisfies Record<string, { label: string; icon: typeof FaRocket; growthRate: number; dividendYield: number; incomeMode: IncomeMode; withdrawalRate: number; products: string }>;
 
 type ScenarioKey = keyof typeof SCENARIOS;
 
@@ -55,6 +103,8 @@ const DEFAULTS = {
   monthlyAmount: 300000, // 毎月の積立額（30万円）
   growthRate: 1, // 価格成長率（%）強気シナリオ（カバードコールETF・BDC等）と同じ値
   dividendYield: 7, // 配当利回り（%）強気シナリオを想定したデフォルト値
+  incomeMode: 'dividend' as IncomeMode, // 生活費の受け取り方（配当 or 取り崩し）
+  withdrawalRate: 4, // 取り崩し率（%）取り崩しモードで使用する。いわゆる4%ルール
   targetMonthlyDividend: 100000, // 目標の毎月配当額（10万円）
   startYear: CURRENT_YEAR, // 計算開始年
   startMonth: CURRENT_MONTH, // 計算開始月（1-12）
@@ -73,6 +123,8 @@ export default function Home() {
   const [monthlyAmount, setMonthlyAmount] = useState(DEFAULTS.monthlyAmount);
   const [growthRate, setGrowthRate] = useState(DEFAULTS.growthRate);
   const [dividendYield, setDividendYield] = useState(DEFAULTS.dividendYield);
+  const [incomeMode, setIncomeMode] = useState<IncomeMode>(DEFAULTS.incomeMode);
+  const [withdrawalRate, setWithdrawalRate] = useState(DEFAULTS.withdrawalRate);
   const [targetMonthlyDividend, setTargetMonthlyDividend] = useState(DEFAULTS.targetMonthlyDividend);
   const [startYear, setStartYear] = useState(DEFAULTS.startYear);
   const [startMonth, setStartMonth] = useState(DEFAULTS.startMonth);
@@ -84,20 +136,28 @@ export default function Home() {
     setMonthlyAmount(DEFAULTS.monthlyAmount);
     setGrowthRate(DEFAULTS.growthRate);
     setDividendYield(DEFAULTS.dividendYield);
+    setIncomeMode(DEFAULTS.incomeMode);
+    setWithdrawalRate(DEFAULTS.withdrawalRate);
     setTargetMonthlyDividend(DEFAULTS.targetMonthlyDividend);
     setStartYear(DEFAULTS.startYear);
     setStartMonth(DEFAULTS.startMonth);
     setMarket(DEFAULTS.market);
   };
 
-  // 目標の毎月配当額（税引後）から必要な資産額を逆算（app/page.tsx requiredAmount）
-  // 目標額は手取り（税引後）とみなし、(1 - 税率) で割り戻して税引前の配当額に換算してから
-  // 配当利回りで必要資産額を逆算する。積立シミュレーションの目標額として使用する
+  // 受け取り方に応じた表示ラベル・税率・年率（app/page.tsx）
+  // 配当モードでは配当利回りと配当税率、取り崩しモードでは取り崩し率と譲渡益課税率を使う
+  const incomeLabel = incomeMode === 'withdrawal' ? '取り崩し' : '配当';
+  const incomeRate = incomeMode === 'withdrawal' ? withdrawalRate : dividendYield;
+  const incomeTaxRate = incomeMode === 'withdrawal' ? CAPITAL_GAINS_TAX_RATE : MARKETS[market].taxRate;
+
+  // 目標の毎月受取額（税引後）から必要な資産額を逆算（app/page.tsx requiredAmount）
+  // 目標額は手取り（税引後）とみなし、(1 - 税率) で割り戻して税引前の受取額に換算してから
+  // 配当利回り（または取り崩し率）で必要資産額を逆算する。積立シミュレーションの目標額として使用する
+  // 取り崩しモードは本来は譲渡益部分にしか課税されないが、保守的に取り崩し額全体へ課税する前提で計算する
   const requiredAmount = useMemo(() => {
-    const taxRate = MARKETS[market].taxRate;
-    const annualDividendBeforeTax = (targetMonthlyDividend / (1 - taxRate)) * 12;
-    return dividendYield > 0 ? annualDividendBeforeTax / (dividendYield / 100) : 0;
-  }, [targetMonthlyDividend, dividendYield, market]);
+    const annualIncomeBeforeTax = (targetMonthlyDividend / (1 - incomeTaxRate)) * 12;
+    return incomeRate > 0 ? annualIncomeBeforeTax / (incomeRate / 100) : 0;
+  }, [targetMonthlyDividend, incomeRate, incomeTaxRate]);
 
   // 実効年利の計算（app/page.tsx effectiveAnnualReturn）
   // 価格成長率に、税引後の配当を再投資した分を加えたトータルリターン（%）
@@ -156,7 +216,7 @@ export default function Home() {
 
   // グラフ表示用データ（app/page.tsx chartData）
   // 半年（6ヶ月）ごとへ間引き（最終点＝目標達成月は必ず含める）、
-  // 各時点の資産総額から月間配当額（税引前・税引後）を算出する
+  // 各時点の資産総額から月間の受取額＝配当額または取り崩し額（税引前・税引後）を算出する
   const chartData = useMemo(() => {
     const { data } = simulationData;
     if (data.length === 0) return [];
@@ -165,16 +225,15 @@ export default function Home() {
     if (sampled[sampled.length - 1]?.month !== lastPoint.month) {
       sampled.push(lastPoint);
     }
-    const taxRate = MARKETS[market].taxRate;
     return sampled.map((point) => {
-      const monthlyDividend = point.amount * dividendYield / 100 / 12;
+      const monthlyIncome = point.amount * incomeRate / 100 / 12;
       return {
         ...point,
-        monthlyDividend: Math.round(monthlyDividend),
-        monthlyDividendAfterTax: Math.round(monthlyDividend * (1 - taxRate)),
+        monthlyIncome: Math.round(monthlyIncome),
+        monthlyIncomeAfterTax: Math.round(monthlyIncome * (1 - incomeTaxRate)),
       };
     });
-  }, [simulationData, dividendYield, market]);
+  }, [simulationData, incomeRate, incomeTaxRate]);
 
   // 年間積立額の計算
   const estimatedAnnualIncome = useMemo(() => {
@@ -401,7 +460,7 @@ export default function Home() {
 
                   <VStack align="stretch" gap={1}>
                     <Text fontSize="sm" fontWeight="medium">
-                      目標の毎月配当額（円・税引後）
+                      目標の毎月{incomeLabel}額（円・税引後）
                     </Text>
                     <Input
                       type="text"
@@ -455,7 +514,7 @@ export default function Home() {
                       </Button>
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      税引後でこの配当額を得るのに必要な資産額が目標額になります
+                      税引後でこの{incomeLabel}額を得るのに必要な資産額が目標額になります
                     </Text>
                   </VStack>
 
@@ -468,32 +527,58 @@ export default function Home() {
                         const scenario = SCENARIOS[key];
                         const ScenarioIcon = scenario.icon;
                         const isActive =
-                          growthRate === scenario.growthRate && dividendYield === scenario.dividendYield;
+                          incomeMode === scenario.incomeMode &&
+                          growthRate === scenario.growthRate &&
+                          (scenario.incomeMode === 'withdrawal'
+                            ? withdrawalRate === scenario.withdrawalRate
+                            : dividendYield === scenario.dividendYield);
                         return (
-                          <Button
-                            key={key}
-                            onClick={() => {
-                              setGrowthRate(scenario.growthRate);
-                              setDividendYield(scenario.dividendYield);
-                            }}
-                            colorScheme="blue"
-                            size="sm"
-                            flex={1}
-                            h="auto"
-                            py={1.5}
-                            title={scenario.label}
-                            aria-label={scenario.label}
-                            variant={isActive ? 'solid' : 'outline'}
-                            _dark={isActive
-                              ? { bg: "blue.600", color: "white", _hover: { bg: "blue.500" } }
-                              : { borderColor: "gray.600", color: "gray.300", _hover: { bg: "gray.700" } }}
-                          >
-                            <VStack gap={0.5}>
-                              <ScenarioIcon size={14} />
-                              <Text fontSize="xs" lineHeight="1.2">利回り{scenario.dividendYield}%</Text>
-                              <Text fontSize="xs" lineHeight="1.2">成長{scenario.growthRate}%</Text>
-                            </VStack>
-                          </Button>
+                          // シナリオボタン（app/page.tsx 設定パネル）
+                          // ホバー時にシナリオ名と代表的な商品（SCENARIOS.products）をツールチップ表示する
+                          <ChakraTooltip.Root key={key} openDelay={200} closeDelay={100} positioning={{ placement: 'top' }}>
+                            <ChakraTooltip.Trigger asChild>
+                              <Button
+                                onClick={() => {
+                                  setGrowthRate(scenario.growthRate);
+                                  setDividendYield(scenario.dividendYield);
+                                  setIncomeMode(scenario.incomeMode);
+                                  setWithdrawalRate(scenario.withdrawalRate);
+                                }}
+                                colorScheme="blue"
+                                size="sm"
+                                flex={1}
+                                h="auto"
+                                py={1.5}
+                                aria-label={scenario.label}
+                                variant={isActive ? 'solid' : 'outline'}
+                                _dark={isActive
+                                  ? { bg: "blue.600", color: "white", _hover: { bg: "blue.500" } }
+                                  : { borderColor: "gray.600", color: "gray.300", _hover: { bg: "gray.700" } }}
+                              >
+                                <VStack gap={0.5}>
+                                  <ScenarioIcon size={14} />
+                                  <Text fontSize="xs" lineHeight="1.2">
+                                    {scenario.incomeMode === 'withdrawal'
+                                      ? `取崩${scenario.withdrawalRate}%`
+                                      : `利回り${scenario.dividendYield}%`}
+                                  </Text>
+                                  <Text fontSize="xs" lineHeight="1.2">成長{scenario.growthRate}%</Text>
+                                </VStack>
+                              </Button>
+                            </ChakraTooltip.Trigger>
+                            <Portal>
+                              <ChakraTooltip.Positioner>
+                                <ChakraTooltip.Content maxW="260px">
+                                  <ChakraTooltip.Arrow>
+                                    <ChakraTooltip.ArrowTip />
+                                  </ChakraTooltip.Arrow>
+                                  <Text fontSize="xs" fontWeight="bold" mb={0.5}>{scenario.label}</Text>
+                                  <Text fontSize="xs">{scenario.products}</Text>
+                                  <Text fontSize="xs" opacity={0.7} mt={1}>※利回りは変動するため目安です</Text>
+                                </ChakraTooltip.Content>
+                              </ChakraTooltip.Positioner>
+                            </Portal>
+                          </ChakraTooltip.Root>
                         );
                       })}
                     </HStack>
@@ -540,24 +625,26 @@ export default function Home() {
                       </HStack>
                     </VStack>
 
+                    {/* 受け取り方に応じて配当利回り／取り崩し率を切り替える入力（app/page.tsx 設定パネル）
+                        取り崩しモードでは配当が出ない想定のため、取り崩し率だけを調整対象にする */}
                     <VStack align="stretch" gap={1}>
                       <Text fontSize="sm" fontWeight="medium">
-                        利回り（%）
+                        {incomeMode === 'withdrawal' ? '取り崩し率（%）' : '利回り（%）'}
                       </Text>
                       <Input
                         type="number"
                         inputMode="decimal"
                         autoComplete="off"
                         size="sm"
-                        value={dividendYield}
-                        onChange={(e) => setDividendYield(Number(e.target.value))}
+                        value={incomeRate}
+                        onChange={(e) => (incomeMode === 'withdrawal' ? setWithdrawalRate : setDividendYield)(Number(e.target.value))}
                         step={0.5}
                         min={0}
                         max={20}
                       />
                       <HStack gap={1}>
                         <Button
-                          onClick={() => setDividendYield(prev => Math.max(0, prev - 1))}
+                          onClick={() => (incomeMode === 'withdrawal' ? setWithdrawalRate : setDividendYield)(prev => Math.max(0, prev - 1))}
                           colorScheme="blue"
                           size="xs"
                           flex={1}
@@ -566,7 +653,7 @@ export default function Home() {
                           -1
                         </Button>
                         <Button
-                          onClick={() => setDividendYield(prev => Math.min(20, prev + 1))}
+                          onClick={() => (incomeMode === 'withdrawal' ? setWithdrawalRate : setDividendYield)(prev => Math.min(20, prev + 1))}
                           colorScheme="blue"
                           size="xs"
                           flex={1}
@@ -586,7 +673,9 @@ export default function Home() {
                       </Text>
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      価格成長率 + 利回り × (1 − 税率)
+                      {incomeMode === 'withdrawal'
+                        ? '価格成長率（分配金は投資信託内で再投資される想定）'
+                        : '価格成長率 + 利回り × (1 − 税率)'}
                     </Text>
                   </Box>
 
@@ -612,7 +701,9 @@ export default function Home() {
                       ))}
                     </HStack>
                     <Text fontSize="xs" color="gray.500">
-                      国内: 20.315% / US: 28.2835%（外国税額控除・NISA考慮なし）
+                      {incomeMode === 'withdrawal'
+                        ? '取り崩しは譲渡益課税20.315%で計算（NISA考慮なし）'
+                        : '国内: 20.315% / US: 28.2835%（外国税額控除・NISA考慮なし）'}
                     </Text>
                   </VStack>
                 </SimpleGrid>
@@ -698,7 +789,7 @@ export default function Home() {
                       <YAxis
                         width={isMobile ? 42 : 60}
                         tickFormatter={(value) => `${(value / 10000).toFixed(0)}万`}
-                        label={isMobile ? undefined : { value: '月間配当額（円/月）', angle: -90, position: 'insideLeft' }}
+                        label={isMobile ? undefined : { value: `月間${incomeLabel}額（円/月）`, angle: -90, position: 'insideLeft' }}
                       />
                       <Tooltip
                         formatter={(value) => `${Number(value ?? 0).toLocaleString()}円/月`}
@@ -732,18 +823,18 @@ export default function Home() {
                       />
                       <Line
                         type="monotone"
-                        dataKey="monthlyDividend"
+                        dataKey="monthlyIncome"
                         stroke="#8884d8"
                         strokeWidth={2}
-                        name="月間配当額（税引前）"
+                        name={`月間${incomeLabel}額（税引前）`}
                         dot={{ r: isMobile ? 2.5 : 4 }}
                       />
                       <Line
                         type="monotone"
-                        dataKey="monthlyDividendAfterTax"
+                        dataKey="monthlyIncomeAfterTax"
                         stroke="#82ca9d"
                         strokeWidth={2}
-                        name="月間配当額（税引後）"
+                        name={`月間${incomeLabel}額（税引後）`}
                         dot={{ r: isMobile ? 2.5 : 4 }}
                       />
                     </LineChart>
@@ -766,12 +857,12 @@ export default function Home() {
                   </Box>
 
                   <Box bg="orange.50" _dark={{ bg: "orange.900" }} p={3} borderRadius="lg">
-                    <Text fontSize="xs" mb={1}>現在の毎月配当額</Text>
+                    <Text fontSize="xs" mb={1}>現在の毎月{incomeLabel}額</Text>
                     <Text fontSize="lg" fontWeight="bold" color="orange.600" _dark={{ color: "orange.400" }}>
-                      {Math.round(currentSavings * dividendYield / 100 / 12).toLocaleString()}円
+                      {Math.round(currentSavings * incomeRate / 100 / 12).toLocaleString()}円
                     </Text>
                     <Text fontSize="xs" color="gray.500">
-                      （現在の貯蓄額×配当利回り÷12）
+                      （現在の貯蓄額×{incomeMode === 'withdrawal' ? '取り崩し率' : '配当利回り'}÷12）
                     </Text>
                   </Box>
 
