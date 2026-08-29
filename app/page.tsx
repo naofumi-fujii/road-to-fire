@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import NextLink from 'next/link';
 import { FaRocket, FaBalanceScale, FaShieldAlt, FaGlobe } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useTheme } from 'next-themes';
@@ -261,6 +262,18 @@ export default function Home() {
             </Text>
           </Flex>
           <HStack gap={2}>
+            {/* 金利・為替ページへの導線（app/page.tsx ヘッダー）
+                スマホでは幅を取らないよう短いラベルにする */}
+            <Link
+              asChild
+              fontSize="sm"
+              color="blue.600"
+              _dark={{ color: "blue.300" }}
+              _hover={{ opacity: 0.7 }}
+              whiteSpace="nowrap"
+            >
+              <NextLink href="/rates">金利・為替</NextLink>
+            </Link>
             <Link
               href="https://github.com/naofumi-fujii/road-to-fire"
               target="_blank"
