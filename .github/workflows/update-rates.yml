@@ -1,0 +1,94 @@
+# 政策金利・為替データの自動更新（.github/workflows/update-rates.yml）
+#
+# scripts/update-rates.mjs を実行して app/data/rates.ts に前月までのデータを追記し、
+# 差分が出たらプルリクエストを作る。値の確定（特に日本の政策金利）はレビューで行う前提。
+#
+# 手動実行もできる。Actions タブから "Run workflow" を選ぶと、
+# dry_run を有効にして「取得結果だけ確認する」こともできる。
+#
+# 注意: プルリクエストの作成には、リポジトリの
+# Settings > Actions > General > Workflow permissions で
+# "Allow GitHub Actions to create and approve pull requests" を有効にしておく必要がある。
+name: Update rates data
+
+on:
+  schedule:
+    # 毎月2日 00:15 UTC（日本時間 9:15）。前月の月末値が出揃ってから実行する
+    - cron: '15 0 2 * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'データを取得して結果を表示するだけ（プルリクエストを作らない）'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# 手動実行と定期実行が重なっても、同じブランチを二重に作らないようにする
+concurrency:
+  group: update-rates
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Fetch latest rates
+        id: update
+        env:
+          PR_BODY_FILE: ${{ runner.temp }}/pr-body.md
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            node scripts/update-rates.mjs --dry-run
+          else
+            node scripts/update-rates.mjs
+          fi
+
+      # 追記に失敗して app/data/rates.ts が壊れたまま取り込まれるのを防ぐ
+      - name: Type check
+        if: steps.update.outputs.updated == 'true' && inputs.dry_run != true
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm exec tsc --noEmit
+
+      - name: Create pull request
+        if: steps.update.outputs.updated == 'true' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BODY_FILE: ${{ runner.temp }}/pr-body.md
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- app/data/rates.ts; then
+            echo 'app/data/rates.ts に差分がないため終了する'
+            exit 0
+          fi
+
+          branch="auto/update-rates-$(date -u +%Y%m%d)"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "ブランチ $branch は既に存在するため終了する"
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git add app/data/rates.ts
+          git commit \
+            -m 'Update policy rate and USD/JPY data' \
+            -m 'scripts/update-rates.mjs による自動更新。数値の確認（特に日本の政策金利）はレビューで行う。'
+          git push origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Update policy rate and USD/JPY data" \
+            --body-file "$PR_BODY_FILE"
