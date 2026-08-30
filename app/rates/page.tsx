@@ -246,6 +246,17 @@ export default function RatesPage() {
             >
               <Link href="/">← シミュレーター</Link>
             </ChakraLink>
+            {/* 複利計算ページへの導線（app/rates/page.tsx ヘッダー） */}
+            <ChakraLink
+              asChild
+              fontSize="sm"
+              color="blue.600"
+              _dark={{ color: 'blue.300' }}
+              _hover={{ opacity: 0.7 }}
+              whiteSpace="nowrap"
+            >
+              <Link href="/compound">複利計算</Link>
+            </ChakraLink>
             <ThemeToggle />
           </HStack>
         </Flex>
