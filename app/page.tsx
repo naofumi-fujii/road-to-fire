@@ -274,6 +274,17 @@ export default function Home() {
             >
               <NextLink href="/rates">金利・為替</NextLink>
             </Link>
+            {/* 複利計算ページへの導線（app/page.tsx ヘッダー） */}
+            <Link
+              asChild
+              fontSize="sm"
+              color="blue.600"
+              _dark={{ color: "blue.300" }}
+              _hover={{ opacity: 0.7 }}
+              whiteSpace="nowrap"
+            >
+              <NextLink href="/compound">複利計算</NextLink>
+            </Link>
             <Link
               href="https://github.com/naofumi-fujii/road-to-fire"
               target="_blank"
