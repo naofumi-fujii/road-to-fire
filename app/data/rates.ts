@@ -28,7 +28,7 @@
 export const DATA_START_MONTH = '2000-01';
 
 /** データの最終月（app/data/rates.ts）。UIの「データ最終更新」表示にも使う */
-export const DATA_END_MONTH = '2026-07';
+export const DATA_END_MONTH = '2026-08';
 
 /**
  * 政策金利の変更イベント（app/data/rates.ts）
@@ -193,7 +193,7 @@ const USD_JPY_MONTH_END: readonly number[] = [
   // 2025
   155.2, 150.6, 149.9, 143.0, 144.0, 144.0, 150.7, 147.0, 147.9, 154.0, 155.5, 155.0,
   // 2026
-  154.0, 156.0, 159.5, 156.6, 159.3, 162.4, 160.2,
+  154.0, 156.0, 159.5, 156.6, 159.3, 162.4, 160.2, 159.7,
 ];
 
 /** グラフ1点分のデータ（app/data/rates.ts） */
